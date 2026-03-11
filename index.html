@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Controle Financeiro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js Data Labels Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+  // Registrar plugin globalmente mas não ativar por padrão em todos os gráficos
+  // (vai ser ativado manualmente apenas no gráfico de cartões)
+  const chartjsPluginDatalabels = window.ChartDataLabels;
+</script>
+
+<style>
+body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:0; }
+.sidebar {
+  width:280px; background:#4b1fa6; min-height:100vh;
+  color:#fff; position:fixed; top:0; left:0;
+}
+.sidebar h4 { 
+  padding:20px; border-bottom:1px solid rgba(255,255,255,.2);
+  margin:0; font-size:18px; font-weight:600;
+}
+.sidebar a {
+  display:block; padding:12px 20px; color:#fff; text-decoration:none;
+  transition: all 0.3s;
+}
+.sidebar a i { width:22px; margin-right:8px; }
+.sidebar a:hover, .sidebar a.active { background:rgba(255,255,255,.15); }
+.sidebar footer {
+  position:absolute; bottom:10px; width:100%;
+  padding:10px; font-size:11px; opacity:.7; text-align:center;
+}
+.sidebar .tools { padding:15px; }
+.sidebar .filtros {
+  padding:15px;
+  border-top:1px solid rgba(255,255,255,.2);
+  margin-top:20px;
+}
+.sidebar .filtros label {
+  font-size:12px;
+  opacity:0.9;
+  display:block;
+  margin-bottom:5px;
+}
+.sidebar .filtros select {
+  width:100%;
+  padding:8px;
+  border-radius:6px;
+  border:none;
+  margin-bottom:12px;
+}
+
+.main { margin-left:280px; padding:30px; }
+
+/* CARDS FINANCEIROS - GRID 3x3 */
+.card-fin {
+  border:none; 
+  border-radius:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+  background:#fff;
+  transition: transform 0.3s, box-shadow 0.3s;
+  height:100%;
+}
+.card-fin:hover {
+  transform: translateY(-4px);
+  box-shadow:0 8px 20px rgba(0,0,0,.12);
+}
+.card-fin .icon-circle {
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  margin-bottom:12px;
+}
+.card-fin h6 { 
+  margin:0; 
+  font-size:13px; 
+  opacity:.7;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.card-fin h4 { 
+  margin:10px 0 0 0;
+  font-size:26px;
+  font-weight:700;
+}
+.card-fin small {
+  font-size:12px;
+  opacity:0.7;
+  display:block;
+  margin-top:8px;
+}
+
+/* CORES DOS ÍCONES */
+.icon-green { background:#d4edda; color:#28a745; }
+.icon-red { background:#f8d7da; color:#dc3545; }
+.icon-blue { background:#d1ecf1; color:#17a2b8; }
+.icon-purple { background:#e7d6f5; color:#6f42c1; }
+.icon-darkgreen { background:#d4edda; color:#155724; }
+.icon-orange { background:#fff3cd; color:#fd7e14; }
+.icon-cyan { background:#d1ecf1; color:#0dcaf0; }
+.icon-yellow { background:#fff3cd; color:#ffc107; }
+
+/* SAÚDE FINANCEIRA */
+.saude-saudavel { background:#d4edda; color:#155724; }
+.saude-atencao { background:#fff3cd; color:#856404; }
+.saude-perigo { background:#f8d7da; color:#721c24; }
+
+.form-group { margin-bottom:15px; }
+.hidden { display:none; }
+
+/* GRÁFICOS */
+.chart-container {
+  position:relative;
+  height:300px;
+  margin-top:15px;
+}
+
+/* GRID 3x3 - Cartões do mesmo tamanho */
+.grid-3x3 {
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:20px;
+  margin-bottom:30px;
+}
+
+/* Barra de progresso customizada */
+.progress-parcela {
+  height: 8px;
+  border-radius: 10px;
+  background: #e9ecef;
+  overflow: hidden;
+}
+.progress-parcela .progress-bar {
+  background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+}
+
+/* Badge de status da parcela */
+.badge-quitado { background: #28a745; }
+.badge-pendente { background: #ffc107; }
+
+@media (max-width: 992px) {
+  .grid-3x3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .grid-3x3 {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    width:100%;
+    position:relative;
+  }
+  .main {
+    margin-left:0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h4><i class="fa-solid fa-wallet"></i> Controle Financeiro</h4>
+
+  <a href="#" class="active" onclick="showTab('resumo', this)">
+    <i class="fa-solid fa-gauge-high"></i> Resumo
+  </a>
+  <a href="#" onclick="showTab('lancamentos', this)">
+    <i class="fa-solid fa-file-invoice-dollar"></i> Lançamentos
+  </a>
+  <a href="#" onclick="showTab('emprestimos', this)">
+    <i class="fa-solid fa-hand-holding-dollar"></i> Empréstimos
+  </a>
+  <a href="#" onclick="showTab('cartoes', this)">
+    <i class="fa-solid fa-credit-card"></i> Cartões
+  </a>
+  <a href="#" onclick="showTab('investimentos', this)">
+    <i class="fa-solid fa-sack-dollar"></i> Investimentos
+  </a>
+  <a href="#" onclick="showTab('tutorial', this)">
+    <i class="fa-solid fa-book-open"></i> Tutorial
+  </a>
+
+  <!-- FILTRO GLOBAL -->
+  <div class="filtros">
+    <label>MÊS / ANO</label>
+    <select id="filtroMes" onchange="aplicarFiltro()">
+      <option value="todos">Todos</option>
+      <option value="0">Janeiro</option>
+      <option value="1">Fevereiro</option>
+      <option value="2">Março</option>
+      <option value="3">Abril</option>
+      <option value="4">Maio</option>
+      <option value="5">Junho</option>
+      <option value="6">Julho</option>
+      <option value="7">Agosto</option>
+      <option value="8">Setembro</option>
+      <option value="9">Outubro</option>
+      <option value="10">Novembro</option>
+      <option value="11">Dezembro</option>
+    </select>
+    <select id="filtroAno" onchange="aplicarFiltro()">
+      <!-- Populado dinamicamente pelo JS -->
+    </select>
+  </div>
+
+  <footer>
+    2026 - Sistema desenvolvido por Leandro Machado
+  </footer>
+</div>
+
+<div class="main">
+
+<!-- ================= RESUMO ================= -->
+<div id="resumo">
+  <h3 class="mb-4">
+    <i class="fa-solid fa-gauge-high"></i> Resumo Financeiro
+  </h3>
+
+  <!-- GRID 3x3 -->
+  <div class="grid-3x3">
+    
+    <!-- LINHA 1 -->
+    <div class="card-fin p-3">
+      <div class="icon-circle icon-green">
+        <i class="fa-solid fa-circle-dollar-to-slot"></i>
+      </div>
+      <h6>Receita do Mês</h6>
+      <h4 id="rReceita">R$ 0,00</h4>
+    </div>
+
+    <div class="card-fin p-3">
+      <div class="icon-circle icon-blue">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+      </div>
+      <h6>Saldo Anterior</h6>
+      <h4 id="rSaldoAnterior">R$ 0,00</h4>
+    </div>
+
+    <div class="card-fin p-3">
+      <div class="icon-circle icon-purple">
+        <i class="fa-solid fa-coins"></i>
+      </div>
+      <h6>Receita Total</h6>
+      <h4 id="rReceitaTotal">R$ 0,00</h4>
+    </div>
+
+    <!-- LINHA 2 -->
+    <div class="card-fin p-3">
+      <div class="icon-circle icon-purple">
+        <i class="fa-solid fa-sack-dollar"></i>
+      </div>
+      <h6>Investimentos do Mês</h6>
+      <h4 id="rInvestimentos">R$ 0,00</h4>
+    </div>
+
+    <div class="card-fin p-3">
+      <div class="icon-circle icon-darkgreen">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h6>Reserva de Emergência</h6>
+      <h4 id="rReserva">R$ 0,00</h4>
+    </div>
+
+    <div class="card-fin p-3">
+      <div class="icon-circle icon-red">
+        <i class="fa-solid fa-money-bill-wave"></i>
+      </div>
+      <h6>Despesas do Mês</h6>
+      <h4 id="rDespesas">R$ 0,00</h4>
+    </div>
+
+    <!-- LINHA 3 -->
+    <div class="card-fin p-3">
+      <div class="icon-circle icon-blue">
+        <i class="fa-solid fa-wallet"></i>
+      </div>
+      <h6>Saldo Final do Mês</h6>
+      <h4 id="rSaldoFinal">R$ 0,00</h4>
+    </div>
+
+    <div class="card-fin p-3">
+      <div class="icon-circle icon-orange">
+        <i class="fa-solid fa-clock"></i>
+      </div>
+      <h6>Próximo Empréstimo a Quitar</h6>
+      <h4 id="rProxEmprestimo">-</h4>
+      <small id="rProxEmprestimoDesc">Nenhum empréstimo ativo</small>
+    </div>
+
+    <div id="cardSaude" class="card-fin p-3 saude-atencao">
+      <div class="icon-circle" style="background:transparent;">
+        <i class="fa-solid fa-heart-circle-bolt" style="font-size:28px;"></i>
+      </div>
+      <h6>Saúde Financeira</h6>
+      <h4 id="rSaude">ATENÇÃO</h4>
+      <small id="rSaudeDesc">Aguardando dados...</small>
+    </div>
+  </div>
+
+  <!-- GRÁFICOS -->
+  <div class="row g-4 mt-3">
+    <div class="col-lg-6">
+      <div class="card-fin p-4">
+        <h5><i class="fa-solid fa-chart-column"></i> Receita × Despesa (Mensal)</h5>
+        <div class="chart-container">
+          <canvas id="graficoReceitaDespesa"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card-fin p-4">
+        <h5><i class="fa-solid fa-chart-line"></i> Saldo Final Mensal</h5>
+        <div class="chart-container">
+          <canvas id="graficoSaldoFinal"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= LANÇAMENTOS ================= -->
+<div id="lancamentos" class="hidden">
+  <div class="card-fin p-4">
+    <h5><i class="fa-solid fa-circle-plus"></i> Novo Lançamento</h5>
+    <div class="row">
+      <div class="col-md-3 form-group">
+        <label>Descrição</label>
+        <input id="lDesc" class="form-control" placeholder="Ex: Salário">
+      </div>
+      <div class="col-md-2 form-group">
+        <label>Tipo</label>
+        <select id="lTipo" class="form-control" onchange="toggleCategoriaEmprestimo()">
+          <option value="entrada">Entrada</option>
+          <option value="saida">Saída</option>
+        </select>
+      </div>
+      <div class="col-md-3 form-group" id="categoriaWrapper">
+        <label>Categoria</label>
+        <select id="lCategoria" class="form-control" onchange="toggleCategoriaEmprestimo()">
+          <option>Casa</option>
+          <option>Carro</option>
+          <option>Saúde</option>
+          <option>Lazer</option>
+          <option>Alimentação</option>
+          <option>Educação</option>
+          <option>Outros</option>
+          <option>Empréstimo</option>
+        </select>
+      </div>
+      <div class="col-md-2 form-group">
+        <label>Valor</label>
+        <input type="number" id="lValor" class="form-control" placeholder="0.00">
+      </div>
+      <div class="col-md-2 form-group">
+        <label>Data</label>
+        <input type="date" id="lData" class="form-control">
+      </div>
+    </div>
+
+    <div class="row hidden" id="emprestimoExtra">
+      <div class="col-md-6 form-group">
+        <label>Selecione o Empréstimo</label>
+        <select id="lEmprestimoSelect" class="form-control">
+          <option value="">-- Selecione um empréstimo --</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-success" onclick="addLancamento()">
+      <i class="fa-solid fa-check"></i> Salvar Lançamento
+    </button>
+  </div>
+
+  <!-- LISTA DE LANÇAMENTOS -->
+  <div class="card-fin p-4 mt-4">
+    <h5><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Lançamentos</h5>
+    <div class="table-responsive mt-3">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaLancamentos">
+          <tr><td colspan="6" class="text-center text-muted">Nenhum lançamento para este mês</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================= EMPRÉSTIMOS ================= -->
+<div id="emprestimos" class="hidden">
+  <div class="card-fin p-4 mb-4">
+    <h5><i class="fa-solid fa-hand-holding-dollar"></i> Cadastrar Empréstimo</h5>
+    <div class="row">
+      <div class="col-md-3 form-group">
+        <label>Origem do Empréstimo</label>
+        <input id="eOrigem" class="form-control" placeholder="Ex: Banco Itaú">
+      </div>
+      <div class="col-md-3 form-group">
+        <label>Valor Total</label>
+        <input type="number" id="eValorTotal" class="form-control" placeholder="Ex: 5000.00">
+      </div>
+      <div class="col-md-2 form-group">
+        <label>Nº de Parcelas</label>
+        <input type="number" id="eParcelas" class="form-control" placeholder="Ex: 10">
+      </div>
+      <div class="col-md-2 form-group">
+        <label>Data de Início</label>
+        <input type="date" id="eData" class="form-control">
+      </div>
+      <div class="col-md-2 form-group d-flex align-items-end">
+        <button class="btn btn-primary w-100" onclick="addEmprestimo()">
+          <i class="fa-solid fa-plus"></i> Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARDS INFORMATIVOS -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card-fin p-3">
+        <div class="icon-circle icon-red">
+          <i class="fa-solid fa-money-bill-trend-up"></i>
+        </div>
+        <h6>Total Empréstimos do Mês</h6>
+        <h4 id="eTotalMes">R$ 0,00</h4>
+        <small>Parcelas pagas no mês</small>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-fin p-3">
+        <div class="icon-circle icon-green">
+          <i class="fa-solid fa-check-circle"></i>
+        </div>
+        <h6>Próximo a Quitar</h6>
+        <h4 id="eProximo">-</h4>
+        <small id="eProximoDesc">Nenhum empréstimo ativo</small>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-fin p-3">
+        <div class="icon-circle icon-orange">
+          <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <h6>Mais Longo a Quitar</h6>
+        <h4 id="eLongo">-</h4>
+        <small id="eLongoDesc">Nenhum empréstimo ativo</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRÁFICO DE EVOLUÇÃO -->
+  <div class="card-fin p-4 mb-4">
+    <h5><i class="fa-solid fa-chart-line"></i> Evolução Mensal de Empréstimos</h5>
+    <div class="chart-container">
+      <canvas id="graficoEmprestimos"></canvas>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO DE EMPRÉSTIMOS -->
+  <div class="card-fin p-4">
+    <h5><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Empréstimos</h5>
+    <div class="table-responsive mt-3">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Origem</th>
+            <th>Valor Total</th>
+            <th>Valor Parcela</th>
+            <th>Parcelas Pagas</th>
+            <th>Total de Parcelas</th>
+            <th>Saldo Restante</th>
+            <th>Progresso</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaEmprestimos">
+          <tr><td colspan="8" class="text-center text-muted">Nenhum empréstimo cadastrado</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CARTÕES ================= -->
+<div id="cartoes" class="hidden">
+  <div class="card-fin p-4 mb-4">
+    <h5><i class="fa-solid fa-credit-card"></i> Adicionar Cartão</h5>
+    <div class="row">
+      <div class="col-md-3 form-group">
+        <label>Banco</label>
+        <input id="cBanco" class="form-control" placeholder="Ex: Nubank">
+      </div>
+      <div class="col-md-3 form-group">
+        <label>Valor da Fatura</label>
+        <input type="number" id="cValor" class="form-control" placeholder="0.00">
+      </div>
+      <div class="col-md-3 form-group">
+        <label>Data</label>
+        <input type="date" id="cData" class="form-control">
+      </div>
+      <div class="col-md-3 form-group d-flex align-items-end">
+        <button class="btn btn-primary w-100" onclick="addCartao()">
+          <i class="fa-solid fa-plus"></i> Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card-fin p-3">
+        <div class="icon-circle icon-red">
+          <i class="fa-solid fa-money-bill-trend-up"></i>
+        </div>
+        <h6>Gasto Total do Mês</h6>
+        <h4 id="cTotal">R$ 0,00</h4>
+        <small>Lançamentos + Cartões</small>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-fin p-3">
+        <div class="icon-circle icon-cyan">
+          <i class="fa-solid fa-credit-card"></i>
+        </div>
+        <h6>Maior Fatura</h6>
+        <h4 id="cMaior">-</h4>
+        <small id="cMaiorDesc">Nenhum cartão</small>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-fin p-3">
+        <div class="icon-circle icon-orange">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <h6>Gasto Total do Ano</h6>
+        <h4 id="cTotalAno">R$ 0,00</h4>
+        <small>Todos os meses do ano</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-fin p-3 mb-4">
+    <h6><i class="fa-solid fa-chart-column"></i> Distribuição de Gastos por Cartão</h6>
+    <div class="chart-container">
+      <canvas id="graficoCartoes"></canvas>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO DE CARTÕES -->
+  <div class="card-fin p-4">
+    <h5><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Cartões</h5>
+    <div class="table-responsive mt-3">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Banco</th>
+            <th>Valor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaCartoes">
+          <tr><td colspan="4" class="text-center text-muted">Nenhum cartão cadastrado</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================= INVESTIMENTOS ================= -->
+<div id="investimentos" class="hidden">
+  <div class="card-fin p-4">
+    <h5><i class="fa-solid fa-chart-line-up"></i> Investimentos e Reserva</h5>
+    <div class="row">
+      <div class="col-md-3 form-group">
+        <label>Nome</label>
+        <input id="iNome" class="form-control" placeholder="Ex: Tesouro Direto">
+      </div>
+      <div class="col-md-2 form-group">
+        <label>Tipo</label>
+        <select id="iTipo" class="form-control">
+          <option>Investimento</option>
+          <option>Reserva</option>
+        </select>
+      </div>
+      <div class="col-md-2 form-group">
+        <label>Valor</label>
+        <input type="number" id="iValor" class="form-control" placeholder="0.00">
+      </div>
+      <div class="col-md-3 form-group">
+        <label>Data</label>
+        <input type="date" id="iData" class="form-control">
+      </div>
+      <div class="col-md-2 form-group d-flex align-items-end">
+        <button class="btn btn-success w-100" onclick="addInvestimento()">
+          <i class="fa-solid fa-check"></i> Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO DE INVESTIMENTOS -->
+  <div class="card-fin p-4 mt-4">
+    <h5><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Investimentos</h5>
+    <div class="table-responsive mt-3">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Nome</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaInvestimentos">
+          <tr><td colspan="5" class="text-center text-muted">Nenhum investimento para este mês</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TUTORIAL ================= -->
+<div id="tutorial" class="hidden">
+  <div class="card-fin p-4">
+    <h5><i class="fa-solid fa-book-open"></i> Como usar o sistema</h5>
+    <div class="mt-3">
+      <h6><i class="fa-solid fa-chart-pie text-primary"></i> Resumo</h6>
+      <p>Visão geral das suas finanças com 9 indicadores principais, incluindo receita, despesas, investimentos e saúde financeira.</p>
+      
+      <h6 class="mt-4"><i class="fa-solid fa-plus-circle text-success"></i> Lançamentos</h6>
+      <p>Registre todas as suas entradas e saídas. Categorize seus gastos para melhor análise.</p>
+      
+      <h6 class="mt-4"><i class="fa-solid fa-hand-holding-dollar text-warning"></i> Empréstimos</h6>
+      <p>Cadastre seus empréstimos com origem, valor total e parcelas. Ao lançar pagamentos na aba Lançamentos, selecione o empréstimo correspondente para dar baixa automática nas parcelas.</p>
+      
+      <h6 class="mt-4"><i class="fa-solid fa-credit-card text-info"></i> Cartões</h6>
+      <p>Controle as faturas dos seus cartões de crédito mês a mês.</p>
+      
+      <h6 class="mt-4"><i class="fa-solid fa-piggy-bank text-warning"></i> Investimentos</h6>
+      <p>Acompanhe seus investimentos e reserva de emergência para garantir segurança financeira.</p>
+      
+      <h6 class="mt-4"><i class="fa-solid fa-filter text-secondary"></i> Filtros</h6>
+      <p>Use os filtros de mês e ano na barra lateral para navegar entre diferentes períodos.</p>
+    </div>
+  </div>
+
+  <!-- FERRAMENTAS DE BACKUP -->
+  <div class="card-fin p-4 mt-4">
+    <h5><i class="fa-solid fa-database"></i> Backup e Importação</h5>
+    <p class="text-muted">Faça backup dos seus dados financeiros ou importe dados de um backup anterior.</p>
+    <div class="row g-3 mt-2">
+      <div class="col-md-6">
+        <button class="btn btn-primary w-100" onclick="exportarBackup()">
+          <i class="fa-solid fa-download"></i> Exportar Backup
+        </button>
+      </div>
+      <div class="col-md-6">
+        <input type="file" id="importFile" hidden onchange="importarBackup(event)" accept=".json">
+        <button class="btn btn-success w-100" onclick="importFile.click()">
+          <i class="fa-solid fa-upload"></i> Importar Backup
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ========== CONFIGURAÇÃO FIREBASE ==========
+const firebaseConfig = {
+  apiKey: "AIzaSyD2DMYmaMkWp5EAj6LsbX_9QsYzsQb5Xso",
+  authDomain: "controle-financeiro-jonatas.firebaseapp.com",
+  projectId: "controle-financeiro-jonatas",
+  storageBucket: "controle-financeiro-jonatas.firebasestorage.app",
+  messagingSenderId: "532447975595",
+  appId: "1:532447975595:web:5082f8c5f65ed06efd3fee"
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ========== VARIÁVEIS GLOBAIS ==========
+// IMPORTANTE: declaradas ANTES de qualquer chamada ao Firebase para evitar race condition
+let lancamentos = JSON.parse(localStorage.getItem("lancamentos")) || [];
+let cartoes = JSON.parse(localStorage.getItem("cartoes")) || [];
+let investimentos = JSON.parse(localStorage.getItem("investimentos")) || [];
+let emprestimos = JSON.parse(localStorage.getItem("emprestimos")) || [];
+
+// ========== ID DE SESSÃO COMPARTILHADA ==========
+// Permite sincronizar entre dispositivos usando um código comum
+// ID fixo vinculado aos seus dados no Firebase
+// Este ID nunca muda, mesmo que o cache seja limpo
+const ID_FIREBASE_FIXO = 'jonatas_principal';
+let deviceId = ID_FIREBASE_FIXO;
+
+// Exibir ID de sessão na interface (será inserido no sidebar)
+// ========== FORCAR LEITURA DO FIREBASE ==========
+
+// ========== FUNÇÕES DE SINCRONIZAÇÃO FIREBASE ==========
+async function salvarNoFirebase(colecao, dados) {
+  try {
+    await db.collection(colecao).doc(deviceId).set({
+      items: dados,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    console.log(`✓ ${colecao} sincronizado com Firebase`);
+  } catch (error) {
+    console.error(`Erro ao salvar ${colecao}:`, error);
+  }
+}
+
+// Listeners em tempo real (onSnapshot) — substituem o get() único
+let _unsubscribers = [];
+
+function iniciarListeners() {
+  // Cancelar listeners anteriores se houver
+  _unsubscribers.forEach(fn => fn());
+  _unsubscribers = [];
+
+  const colecoes = [
+    { nome: 'lancamentos', setter: (v) => { lancamentos = v; localStorage.setItem("lancamentos", JSON.stringify(v)); } },
+    { nome: 'cartoes',     setter: (v) => { cartoes = v;     localStorage.setItem("cartoes", JSON.stringify(v)); } },
+    { nome: 'investimentos', setter: (v) => { investimentos = v; localStorage.setItem("investimentos", JSON.stringify(v)); } },
+    { nome: 'emprestimos', setter: (v) => { emprestimos = v; localStorage.setItem("emprestimos", JSON.stringify(v)); } },
+  ];
+
+  let prontos = 0;
+  const total = colecoes.length;
+
+  function atualizarInterface() {
+    reconstruirFiltroAnos();
+    atualizarResumo();
+    atualizarTabelaLancamentos();
+    atualizarCartoes();
+    atualizarTabelaInvestimentos();
+    atualizarEmprestimos();
+    atualizarSelectEmprestimos();
+  }
+
+  colecoes.forEach(({ nome, setter }) => {
+    const unsub = db.collection(nome).doc(deviceId).onSnapshot(doc => {
+      if (doc.exists && doc.data() && doc.data().items) {
+        setter(doc.data().items);
+        console.log(`✓ ${nome} carregado:`, doc.data().items.length, 'itens');
+      } else {
+        console.log(`ℹ ${nome}: documento não encontrado ou vazio`);
+      }
+      prontos++;
+      // Atualizar interface a cada coleção que chegar (não espera todas)
+      atualizarInterface();
+      if (prontos === total) {
+        console.log('✓ Todos os listeners Firebase ativos!');
+      }
+    }, error => {
+      console.error(`Erro no listener ${nome}:`, error);
+      // Mesmo com erro, incrementa prontos para não travar
+      prontos++;
+      atualizarInterface();
+    });
+    _unsubscribers.push(unsub);
+  });
+}
+
+let grafReceitaDespesa, grafSaldoFinal, grafCartoes, grafEmprestimos;
+
+// Definir data atual nos campos
+document.getElementById('lData').valueAsDate = new Date();
+document.getElementById('cData').valueAsDate = new Date();
+document.getElementById('iData').valueAsDate = new Date();
+document.getElementById('eData').valueAsDate = new Date();
+
+// Construir filtro de anos dinamicamente e selecionar mês atual
+const hoje = new Date();
+reconstruirFiltroAnos();
+document.getElementById('filtroMes').value = hoje.getMonth();
+
+// ========== NAVEGAÇÃO ENTRE ABAS ==========
+function showTab(id, el){
+  document.querySelectorAll('.main > div').forEach(d=>d.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+  el.classList.add('active');
+  
+  if(id === 'resumo') atualizarResumo();
+  if(id === 'lancamentos') {
+    atualizarTabelaLancamentos();
+    atualizarSelectEmprestimos();
+  }
+  if(id === 'emprestimos') atualizarEmprestimos();
+  if(id === 'cartoes') atualizarCartoes();
+  if(id === 'investimentos') atualizarTabelaInvestimentos();
+}
+
+// ========== TOGGLE CATEGORIA / EMPRÉSTIMO ==========
+function toggleCategoriaEmprestimo(){
+  const tipo = document.getElementById('lTipo').value;
+  const categoriaWrapper = document.getElementById('categoriaWrapper');
+  const emprestimoExtra = document.getElementById('emprestimoExtra');
+
+  // Se for entrada, esconde Categoria e Empréstimo
+  if(tipo === 'entrada'){
+    categoriaWrapper.classList.add('hidden');
+    emprestimoExtra.classList.add('hidden');
+  } else {
+    categoriaWrapper.classList.remove('hidden');
+    // Empréstimo só aparece se Saída + Categoria = Empréstimo
+    emprestimoExtra.classList.toggle('hidden', document.getElementById('lCategoria').value !== 'Empréstimo');
+  }
+}
+
+// ========== ATUALIZAR SELECT DE EMPRÉSTIMOS ==========
+function atualizarSelectEmprestimos(){
+  const select = document.getElementById('lEmprestimoSelect');
+  select.innerHTML = '<option value="">-- Selecione um empréstimo --</option>';
+  
+  // Apenas empréstimos ativos (com parcelas pendentes)
+  const emprestimosAtivos = emprestimos.filter(e => e.parcelasPagas < e.totalParcelas);
+  
+  emprestimosAtivos.forEach(emp => {
+    const opt = document.createElement('option');
+    opt.value = emp.id;
+    const valorParcela = emp.valorTotal / emp.totalParcelas;
+    opt.textContent = `${emp.origem} - ${emp.parcelasPagas}/${emp.totalParcelas} - R$ ${valorParcela.toFixed(2)}/parcela`;
+    select.appendChild(opt);
+  });
+}
+
+// ========== ADICIONAR LANÇAMENTO ==========
+function addLancamento(){
+  if(!lDesc.value || !lValor.value || !lData.value){
+    alert('Preencha todos os campos obrigatórios!');
+    return;
+  }
+
+  const lancamento = {
+    id: Date.now(),
+    descricao: lDesc.value,
+    tipo: lTipo.value,
+    categoria: lTipo.value === 'entrada' ? 'Entrada' : lCategoria.value,
+    valor: parseFloat(lValor.value),
+    data: lData.value
+  };
+
+  // Se for empréstimo, vincular ao empréstimo selecionado
+  if(lCategoria.value === 'Empréstimo' && lTipo.value === 'saida'){
+    const emprestimoId = parseInt(lEmprestimoSelect.value);
+    if(!emprestimoId){
+      alert('Selecione um empréstimo para dar baixa!');
+      return;
+    }
+    
+    const emprestimo = emprestimos.find(e => e.id === emprestimoId);
+    if(!emprestimo){
+      alert('Empréstimo não encontrado!');
+      return;
+    }
+    
+    // Verificar se ainda há parcelas a pagar
+    if(emprestimo.parcelasPagas >= emprestimo.totalParcelas){
+      alert('Este empréstimo já foi totalmente quitado!');
+      return;
+    }
+    
+    // Dar baixa na parcela
+    emprestimo.parcelasPagas += 1;
+    lancamento.emprestimoId = emprestimoId;
+    lancamento.emprestimoOrigem = emprestimo.origem;
+    
+    localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
+    salvarNoFirebase('emprestimos', emprestimos);
+  }
+
+  lancamentos.push(lancamento);
+  localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+  salvarNoFirebase('lancamentos', lancamentos);
+  
+  // Limpar campos
+  lDesc.value = '';
+  lValor.value = '';
+  lEmprestimoSelect.value = '';
+  
+  reconstruirFiltroAnos();
+  atualizarResumo();
+  atualizarTabelaLancamentos();
+  atualizarSelectEmprestimos();
+  alert('Lançamento adicionado com sucesso!');
+}
+
+// ========== ADICIONAR EMPRÉSTIMO ==========
+function addEmprestimo(){
+  if(!eOrigem.value || !eValorTotal.value || !eParcelas.value || !eData.value){
+    alert('Preencha todos os campos!');
+    return;
+  }
+
+  const valorTotal = parseFloat(eValorTotal.value);
+  const totalParcelas = parseInt(eParcelas.value);
+
+  if(totalParcelas <= 0){
+    alert('O número de parcelas deve ser maior que zero!');
+    return;
+  }
+
+  emprestimos.push({
+    id: Date.now(),
+    origem: eOrigem.value,
+    valorTotal: valorTotal,
+    totalParcelas: totalParcelas,
+    parcelasPagas: 0,
+    dataInicio: eData.value
+  });
+  
+  localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
+  salvarNoFirebase('emprestimos', emprestimos);
+  
+  eOrigem.value = '';
+  eValorTotal.value = '';
+  eParcelas.value = '';
+  
+  reconstruirFiltroAnos();
+  atualizarEmprestimos();
+  alert('Empréstimo cadastrado com sucesso!');
+}
+
+// ========== ATUALIZAR ABA EMPRÉSTIMOS ==========
+function atualizarEmprestimos(){
+  // CARDS INFORMATIVOS
+  const ano = parseInt(document.getElementById('filtroAno').value);
+  const mes = document.getElementById('filtroMes').value;
+  
+  // Total de empréstimos pagos no mês
+  let totalMes = 0;
+  lancamentos.forEach(l => {
+    if(l.categoria === 'Empréstimo' && l.emprestimoId){
+      const d = new Date(l.data + 'T00:00:00');
+      const mesOk = mes === 'todos' ? true : d.getMonth() === parseInt(mes);
+      const anoOk = d.getFullYear() === ano;
+      if(mesOk && anoOk) totalMes += l.valor;
+    }
+  });
+  
+  document.getElementById('eTotalMes').innerText = totalMes.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  
+  // Empréstimo mais próximo de quitar e mais longo
+  const emprestimosAtivos = emprestimos.filter(e => e.parcelasPagas < e.totalParcelas);
+  
+  if(emprestimosAtivos.length > 0){
+    // Ordenar por parcelas restantes (crescente)
+    const porProximidade = [...emprestimosAtivos].sort((a, b) => {
+      const restanteA = a.totalParcelas - a.parcelasPagas;
+      const restanteB = b.totalParcelas - b.parcelasPagas;
+      return restanteA - restanteB;
+    });
+    
+    const proximo = porProximidade[0];
+    const restanteProx = proximo.totalParcelas - proximo.parcelasPagas;
+    document.getElementById('eProximo').innerText = proximo.origem;
+    document.getElementById('eProximoDesc').innerText = `${restanteProx} ${restanteProx === 1 ? 'parcela restante' : 'parcelas restantes'}`;
+    
+    const longo = porProximidade[porProximidade.length - 1];
+    const restanteLongo = longo.totalParcelas - longo.parcelasPagas;
+    document.getElementById('eLongo').innerText = longo.origem;
+    document.getElementById('eLongoDesc').innerText = `${restanteLongo} ${restanteLongo === 1 ? 'parcela restante' : 'parcelas restantes'}`;
+  } else {
+    document.getElementById('eProximo').innerText = '-';
+    document.getElementById('eProximoDesc').innerText = 'Nenhum empréstimo ativo';
+    document.getElementById('eLongo').innerText = '-';
+    document.getElementById('eLongoDesc').innerText = 'Nenhum empréstimo ativo';
+  }
+  
+  // GRÁFICO DE EVOLUÇÃO MENSAL
+  atualizarGraficoEmprestimos();
+  
+  // TABELA DE EMPRÉSTIMOS
+  atualizarTabelaEmprestimos();
+}
+
+// ========== GRÁFICO DE EMPRÉSTIMOS ==========
+function atualizarGraficoEmprestimos(){
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const ano = parseInt(document.getElementById('filtroAno').value);
+  const pagosPorMes = Array(12).fill(0);
+  
+  // Contar valores pagos por mês
+  lancamentos.forEach(l => {
+    if(l.categoria === 'Empréstimo' && l.emprestimoId){
+      const d = new Date(l.data + 'T00:00:00');
+      if(d.getFullYear() === ano){
+        pagosPorMes[d.getMonth()] += l.valor;
+      }
+    }
+  });
+  
+  if(grafEmprestimos) grafEmprestimos.destroy();
+  grafEmprestimos = new Chart(document.getElementById('graficoEmprestimos'), {
+    type: 'line',
+    data: {
+      labels: meses,
+      datasets: [{
+        label: 'Valor Pago em Empréstimos',
+        data: pagosPorMes,
+        backgroundColor: 'rgba(253, 126, 20, 0.2)',
+        borderColor: 'rgba(253, 126, 20, 1)',
+        borderWidth: 3,
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'top' } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+// ========== TABELA DE EMPRÉSTIMOS ==========
+function atualizarTabelaEmprestimos(){
+  const tbody = document.getElementById('tabelaEmprestimos');
+  
+  if(emprestimos.length === 0){
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Nenhum empréstimo cadastrado</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = '';
+  emprestimos.forEach(e => {
+    const valorParcela = e.valorTotal / e.totalParcelas;
+    const saldoRestante = e.valorTotal - (e.parcelasPagas * valorParcela);
+    const progresso = (e.parcelasPagas / e.totalParcelas) * 100;
+    const status = e.parcelasPagas >= e.totalParcelas ? 'quitado' : 'pendente';
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${e.origem}</td>
+      <td>${e.valorTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+      <td>${valorParcela.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+      <td><span class="badge badge-${status}">${e.parcelasPagas}</span></td>
+      <td>${e.totalParcelas}</td>
+      <td>${saldoRestante.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+      <td>
+        <div class="progress-parcela">
+          <div class="progress-bar" style="width: ${progresso}%"></div>
+        </div>
+        <small class="text-muted">${progresso.toFixed(0)}%</small>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="deletarEmprestimo(${e.id})" title="Excluir">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function deletarEmprestimo(id){
+  if(!confirm('Deseja realmente excluir este empréstimo? Os lançamentos vinculados não serão excluídos.')){
+    return;
+  }
+  
+  emprestimos = emprestimos.filter(e => e.id !== id);
+  localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
+  salvarNoFirebase('emprestimos', emprestimos);
+  atualizarEmprestimos();
+  atualizarSelectEmprestimos();
+}
+
+// ========== ADICIONAR INVESTIMENTO ==========
+function addInvestimento(){
+  if(!iNome.value || !iValor.value || !iData.value){
+    alert('Preencha todos os campos!');
+    return;
+  }
+
+  investimentos.push({
+    id: Date.now(),
+    nome: iNome.value,
+    tipo: iTipo.value,
+    valor: parseFloat(iValor.value),
+    data: iData.value
+  });
+  
+  localStorage.setItem("investimentos", JSON.stringify(investimentos));
+  salvarNoFirebase('investimentos', investimentos);
+  
+  iNome.value = '';
+  iValor.value = '';
+  
+  reconstruirFiltroAnos();
+  atualizarResumo();
+  atualizarTabelaInvestimentos();
+  alert('Investimento adicionado com sucesso!');
+}
+
+// ========== ADICIONAR CARTÃO ==========
+function addCartao(){
+  if(!cBanco.value || !cValor.value || !cData.value){
+    alert('Preencha todos os campos!');
+    return;
+  }
+
+  cartoes.push({
+    id: Date.now(),
+    banco: cBanco.value,
+    valor: parseFloat(cValor.value),
+    data: cData.value
+  });
+  
+  localStorage.setItem("cartoes", JSON.stringify(cartoes));
+  salvarNoFirebase('cartoes', cartoes);
+  
+  cBanco.value = '';
+  cValor.value = '';
+  
+  reconstruirFiltroAnos();
+  atualizarCartoes();
+  atualizarResumo();
+  alert('Cartão adicionado com sucesso!');
+}
+
+// ========== FILTRAR DADOS POR MÊS/ANO ==========
+function filtrarPorMesAno(dados){
+  const mes = document.getElementById('filtroMes').value; // "todos" ou "0"-"11"
+  const ano = parseInt(document.getElementById('filtroAno').value);
+  
+  return dados.filter(item => {
+    const data = new Date(item.data + 'T00:00:00');
+    const anoOk = data.getFullYear() === ano;
+    if(mes === 'todos') return anoOk;
+    return anoOk && data.getMonth() === parseInt(mes);
+  });
+}
+
+// Filtrar apenas por ano (ignora mês)
+function filtrarPorAno(dados){
+  const ano = parseInt(document.getElementById('filtroAno').value);
+  return dados.filter(item => {
+    const data = new Date(item.data + 'T00:00:00');
+    return data.getFullYear() === ano;
+  });
+}
+
+// ========== RECONSTRUIR SELECT DE ANOS DINAMICAMENTE ==========
+function reconstruirFiltroAnos(){
+  const anos = new Set();
+  const hoje = new Date();
+  anos.add(hoje.getFullYear()); // sempre ter o ano atual
+
+  // Pegar todos os anos presentes nos dados
+  [...lancamentos, ...cartoes, ...investimentos, ...emprestimos].forEach(item => {
+    const dataField = item.data || item.dataInicio;
+    if(dataField){
+      const ano = new Date(dataField + 'T00:00:00').getFullYear();
+      anos.add(ano);
+    }
+  });
+
+  // Ordenar anos
+  const anosOrdenados = [...anos].sort((a, b) => a - b);
+
+  // Guardar valor atual do select
+  const valorAtual = document.getElementById('filtroAno').value;
+
+  // Reconstruir options
+  const select = document.getElementById('filtroAno');
+  select.innerHTML = '';
+  anosOrdenados.forEach(ano => {
+    const opt = document.createElement('option');
+    opt.value = ano;
+    opt.textContent = ano;
+    if(String(ano) === String(valorAtual)) opt.selected = true;
+    select.appendChild(opt);
+  });
+
+  // Se o valor anterior não existe mais, selecionar o ano atual
+  if(!anos.has(parseInt(valorAtual))){
+    select.value = hoje.getFullYear();
+  }
+}
+
+function aplicarFiltro(){
+  atualizarResumo();
+  atualizarTabelaLancamentos();
+  atualizarCartoes();
+  atualizarTabelaInvestimentos();
+  atualizarEmprestimos();
+}
+
+// ========== ATUALIZAR RESUMO ==========
+function atualizarResumo(){
+  const lancamentosFiltrados = filtrarPorMesAno(lancamentos);
+  const investimentosFiltrados = filtrarPorMesAno(investimentos);
+  const cartoesFiltrados = filtrarPorMesAno(cartoes);
+
+  const receita = lancamentosFiltrados
+    .filter(l => l.tipo === 'entrada')
+    .reduce((s, l) => s + l.valor, 0);
+  
+  const despesasLancamentos = lancamentosFiltrados
+    .filter(l => l.tipo === 'saida')
+    .reduce((s, l) => s + l.valor, 0);
+  
+  const despesasCartoes = cartoesFiltrados
+    .reduce((s, c) => s + c.valor, 0);
+  
+  const despesasTotal = despesasLancamentos + despesasCartoes;
+  
+  const inv = investimentosFiltrados
+    .filter(i => i.tipo === 'Investimento')
+    .reduce((s, i) => s + i.valor, 0);
+  
+  const res = investimentosFiltrados
+    .filter(i => i.tipo === 'Reserva')
+    .reduce((s, i) => s + i.valor, 0);
+  
+  // SALDO ANTERIOR (só calcula quando um mês específico está selecionado)
+  const mesAtual = document.getElementById('filtroMes').value; // "todos" ou "0"-"11"
+  const anoAtual = parseInt(document.getElementById('filtroAno').value);
+  let saldoAnterior = 0;
+
+  if(mesAtual !== 'todos'){
+    const mesAtualNum = parseInt(mesAtual);
+    
+    // Calcular saldo acumulado de TODOS os meses anteriores ao mês atual
+    // Percorre todos os dados desde o início até o mês anterior ao atual
+    lancamentos.forEach(l => {
+      const d = new Date(l.data + 'T00:00:00');
+      const ano = d.getFullYear();
+      const mes = d.getMonth();
+      
+      // Só considerar lançamentos anteriores ao mês atual
+      if(ano < anoAtual || (ano === anoAtual && mes < mesAtualNum)){
+        if(l.tipo === 'entrada'){
+          saldoAnterior += l.valor;
+        } else {
+          saldoAnterior -= l.valor;
+        }
+      }
+    });
+    
+    // Subtrair despesas de cartões de todos os meses anteriores
+    cartoes.forEach(c => {
+      const d = new Date(c.data + 'T00:00:00');
+      const ano = d.getFullYear();
+      const mes = d.getMonth();
+      
+      if(ano < anoAtual || (ano === anoAtual && mes < mesAtualNum)){
+        saldoAnterior -= c.valor;
+      }
+    });
+    
+    // Subtrair investimentos e reservas de todos os meses anteriores
+    investimentos.forEach(i => {
+      const d = new Date(i.data + 'T00:00:00');
+      const ano = d.getFullYear();
+      const mes = d.getMonth();
+      
+      if(ano < anoAtual || (ano === anoAtual && mes < mesAtualNum)){
+        saldoAnterior -= i.valor;
+      }
+    });
+  }
+
+  const receitaTotal = receita + saldoAnterior;
+  const saldoFinal   = receitaTotal - despesasTotal - inv - res;
+
+  // ATUALIZAR CARDS
+  rReceita.innerText        = receita.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  rSaldoAnterior.innerText  = saldoAnterior.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  rReceitaTotal.innerText   = receitaTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  rInvestimentos.innerText  = inv.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  rReserva.innerText        = res.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  rDespesas.innerText       = despesasTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  rSaldoFinal.innerText     = saldoFinal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+
+  // SAÚDE FINANCEIRA
+  const card = document.getElementById("cardSaude");
+  card.className = "card-fin p-3";
+  if(saldoFinal < 0){
+    card.classList.add("saude-perigo");
+    rSaude.innerText = "PERIGO";
+    rSaudeDesc.innerText = "Saldo negativo. Risco financeiro alto!";
+  } else if(inv > 0 && res > 0 && saldoFinal >= 0){
+    card.classList.add("saude-saudavel");
+    rSaude.innerText = "SAUDÁVEL";
+    rSaudeDesc.innerText = "Parabéns! Você investe e mantém reserva.";
+  } else {
+    card.classList.add("saude-atencao");
+    rSaude.innerText = "ATENÇÃO";
+    rSaudeDesc.innerText = "Saldo positivo, mas falta planejamento.";
+  }
+
+  // PRÓXIMO EMPRÉSTIMO A QUITAR
+  const emprestimosAtivos = emprestimos.filter(e => e.parcelasPagas < e.totalParcelas);
+  if(emprestimosAtivos.length > 0){
+    const porProximidade = [...emprestimosAtivos].sort((a, b) => {
+      const restanteA = a.totalParcelas - a.parcelasPagas;
+      const restanteB = b.totalParcelas - b.parcelasPagas;
+      return restanteA - restanteB;
+    });
+    const emp = porProximidade[0];
+    const restante = emp.totalParcelas - emp.parcelasPagas;
+    const valorParcela = emp.valorTotal / emp.totalParcelas;
+    rProxEmprestimo.innerText = emp.origem;
+    rProxEmprestimoDesc.innerText = `${restante} ${restante === 1 ? 'parcela' : 'parcelas'} • ${valorParcela.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}/mês`;
+  } else {
+    rProxEmprestimo.innerText = '-';
+    rProxEmprestimoDesc.innerText = 'Nenhum empréstimo ativo';
+  }
+
+  atualizarGraficos();
+}
+
+// ========== ATUALIZAR GRÁFICOS ==========
+function atualizarGraficos(){
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const ano = parseInt(document.getElementById('filtroAno').value);
+  
+  const receitasMensais  = Array(12).fill(0);
+  const despesasMensais  = Array(12).fill(0);
+  const saldosMensais    = Array(12).fill(0);
+
+  for(let m = 0; m < 12; m++){
+    const lMes = lancamentos.filter(l => {
+      const d = new Date(l.data + 'T00:00:00');
+      return d.getMonth() === m && d.getFullYear() === ano;
+    });
+    const iMes = investimentos.filter(i => {
+      const d = new Date(i.data + 'T00:00:00');
+      return d.getMonth() === m && d.getFullYear() === ano;
+    });
+    const cMes = cartoes.filter(c => {
+      const d = new Date(c.data + 'T00:00:00');
+      return d.getMonth() === m && d.getFullYear() === ano;
+    });
+
+    const rec  = lMes.filter(l => l.tipo === 'entrada').reduce((s, l) => s + l.valor, 0);
+    const desp = lMes.filter(l => l.tipo === 'saida').reduce((s, l) => s + l.valor, 0) +
+                 cMes.reduce((s, c) => s + c.valor, 0);
+    const inv  = iMes.filter(i => i.tipo === 'Investimento').reduce((s, i) => s + i.valor, 0);
+    const res  = iMes.filter(i => i.tipo === 'Reserva').reduce((s, i) => s + i.valor, 0);
+
+    receitasMensais[m]  = rec;
+    despesasMensais[m]  = desp;
+    saldosMensais[m]    = rec - desp - inv - res;
+  }
+
+  // GRÁFICO RECEITA x DESPESA
+  if(grafReceitaDespesa) grafReceitaDespesa.destroy();
+  grafReceitaDespesa = new Chart(document.getElementById('graficoReceitaDespesa'), {
+    type: 'bar',
+    data: {
+      labels: meses,
+      datasets: [
+        {
+          label: 'Receita',
+          data: receitasMensais,
+          backgroundColor: 'rgba(40, 167, 69, 0.7)',
+          borderColor: 'rgba(40, 167, 69, 1)',
+          borderWidth: 2
+        },
+        {
+          label: 'Despesa',
+          data: despesasMensais,
+          backgroundColor: 'rgba(220, 53, 69, 0.7)',
+          borderColor: 'rgba(220, 53, 69, 1)',
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'top' } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // GRÁFICO SALDO FINAL
+  if(grafSaldoFinal) grafSaldoFinal.destroy();
+  grafSaldoFinal = new Chart(document.getElementById('graficoSaldoFinal'), {
+    type: 'line',
+    data: {
+      labels: meses,
+      datasets: [{
+        label: 'Saldo Final',
+        data: saldosMensais,
+        backgroundColor: 'rgba(23, 162, 184, 0.2)',
+        borderColor: 'rgba(23, 162, 184, 1)',
+        borderWidth: 3,
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'top' } },
+      scales: { y: { beginAtZero: false } }
+    }
+  });
+}
+
+// ========== ATUALIZAR TABELA DE LANÇAMENTOS ==========
+function atualizarTabelaLancamentos(){
+  const lancamentosFiltrados = filtrarPorMesAno(lancamentos);
+  const tbody = document.getElementById('tabelaLancamentos');
+  
+  if(lancamentosFiltrados.length === 0){
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhum lançamento para este mês</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  lancamentosFiltrados.forEach(l => {
+    const cor = l.tipo === 'entrada' ? 'success' : 'danger';
+    let categoriaTexto = l.categoria;
+    if(l.emprestimoOrigem){
+      categoriaTexto += ` (${l.emprestimoOrigem})`;
+    }
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(l.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${l.descricao}</td>
+      <td><span class="badge bg-secondary">${categoriaTexto}</span></td>
+      <td><span class="badge bg-${cor}">${l.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span></td>
+      <td>${l.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-1" onclick="editarLancamento(${l.id})" title="Editar">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deletarLancamento(${l.id})" title="Excluir">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function editarLancamento(id){
+  const lancamento = lancamentos.find(l => l.id === id);
+  if(!lancamento) return;
+  
+  lDesc.value  = lancamento.descricao;
+  lTipo.value  = lancamento.tipo;
+  lValor.value = lancamento.valor;
+  lData.value  = lancamento.data;
+
+  // Restaurar visibilidade baseada no tipo
+  toggleCategoriaEmprestimo();
+
+  if(lancamento.tipo === 'saida'){
+    lCategoria.value = lancamento.categoria;
+    if(lancamento.categoria === 'Empréstimo' && lancamento.emprestimoId){
+      document.getElementById('emprestimoExtra').classList.remove('hidden');
+      lEmprestimoSelect.value = lancamento.emprestimoId;
+      
+      // Devolver a parcela ao empréstimo
+      const emprestimo = emprestimos.find(e => e.id === lancamento.emprestimoId);
+      if(emprestimo && emprestimo.parcelasPagas > 0){
+        emprestimo.parcelasPagas -= 1;
+        localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
+        salvarNoFirebase('emprestimos', emprestimos);
+      }
+    }
+  }
+  
+  // Remover sem pedir confirmação na edição
+  lancamentos = lancamentos.filter(l => l.id !== id);
+  localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+  salvarNoFirebase('lancamentos', lancamentos);
+  atualizarResumo();
+  atualizarTabelaLancamentos();
+  atualizarSelectEmprestimos();
+  
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function deletarLancamento(id){
+  const lancamento = lancamentos.find(l => l.id === id);
+  if(!lancamento) return;
+  
+  if(!confirm('Deseja realmente excluir este lançamento?')) return;
+  
+  // Se for um lançamento de empréstimo, devolver a parcela
+  if(lancamento.emprestimoId){
+    const emprestimo = emprestimos.find(e => e.id === lancamento.emprestimoId);
+    if(emprestimo && emprestimo.parcelasPagas > 0){
+      emprestimo.parcelasPagas -= 1;
+      localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
+      salvarNoFirebase('emprestimos', emprestimos);
+    }
+  }
+  
+  lancamentos = lancamentos.filter(l => l.id !== id);
+  localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+  salvarNoFirebase('lancamentos', lancamentos);
+  atualizarResumo();
+  atualizarTabelaLancamentos();
+  atualizarSelectEmprestimos();
+}
+
+// ========== ATUALIZAR CARTÕES ==========
+function atualizarCartoes(){
+  const cartoesFiltrados     = filtrarPorMesAno(cartoes);
+  const lancamentosFiltrados = filtrarPorMesAno(lancamentos);
+  const ano = parseInt(document.getElementById('filtroAno').value);
+
+  // --- GASTO TOTAL DO MÊS (somente faturas de cartões) ---
+  const despMes = cartoesFiltrados.reduce((s, c) => s + c.valor, 0);
+  document.getElementById('cTotal').innerText = despMes.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+
+  // --- MAIOR FATURA do mês ---
+  if(cartoesFiltrados.length > 0){
+    const maior = cartoesFiltrados.reduce((a, b) => a.valor > b.valor ? a : b);
+    document.getElementById('cMaior').innerText     = maior.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+    document.getElementById('cMaiorDesc').innerText = maior.banco;
+  } else {
+    document.getElementById('cMaior').innerText     = '-';
+    document.getElementById('cMaiorDesc').innerText = 'Nenhum cartão';
+  }
+
+  // --- GASTO TOTAL DO ANO (somente faturas de cartões, ignora filtro de mês) ---
+  const cartAno   = filtrarPorAno(cartoes);
+  const totalAno  = cartAno.reduce((s, c) => s + c.valor, 0);
+  document.getElementById('cTotalAno').innerText = totalAno.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+
+  // --- GRÁFICO DE COLUNAS COM RÓTULOS DE DADOS ---
+  if(grafCartoes) grafCartoes.destroy();
+  
+  if(cartoesFiltrados.length > 0){
+    grafCartoes = new Chart(document.getElementById('graficoCartoes'), {
+      type: 'bar',
+      data: {
+        labels: cartoesFiltrados.map(c => c.banco),
+        datasets: [{
+          label: 'Valor da Fatura',
+          data: cartoesFiltrados.map(c => c.valor),
+          backgroundColor: [
+            'rgba(75, 31, 166, 0.75)',
+            'rgba(40, 167, 69, 0.75)',
+            'rgba(220, 53, 69, 0.75)',
+            'rgba(255, 193, 7, 0.75)',
+            'rgba(23, 162, 184, 0.75)',
+            'rgba(111, 66, 193, 0.75)',
+            'rgba(253, 126, 20, 0.75)',
+            'rgba(13, 202, 240, 0.75)'
+          ],
+          borderColor: [
+            'rgba(75, 31, 166, 1)',
+            'rgba(40, 167, 69, 1)',
+            'rgba(220, 53, 69, 1)',
+            'rgba(255, 193, 7, 1)',
+            'rgba(23, 162, 184, 1)',
+            'rgba(111, 66, 193, 1)',
+            'rgba(253, 126, 20, 1)',
+            'rgba(13, 202, 240, 1)'
+          ],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: { top: 25 }
+        },
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            display: true,
+            color: '#333',
+            font: { weight: 'bold', size: 13 },
+            anchor: 'end',
+            align: 'end',
+            formatter: function(value){
+              return value.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            // dar espaço extra no topo para os rótulos
+            ticks: {
+              callback: function(val){ return val.toLocaleString('pt-BR'); }
+            }
+          }
+        }
+      },
+      plugins: [chartjsPluginDatalabels]
+    });
+  }
+
+  // --- TABELA HISTÓRICO DE CARTÕES ---
+  const tbody = document.getElementById('tabelaCartoes');
+  if(cartoesFiltrados.length === 0){
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nenhum cartão cadastrado</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  cartoesFiltrados.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(c.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${c.banco}</td>
+      <td>${c.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-1" onclick="editarCartao(${c.id})" title="Editar">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deletarCartao(${c.id})" title="Excluir">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function editarCartao(id){
+  const cartao = cartoes.find(c => c.id === id);
+  if(!cartao) return;
+  
+  cBanco.value = cartao.banco;
+  cValor.value = cartao.valor;
+  cData.value  = cartao.data;
+  
+  cartoes = cartoes.filter(c => c.id !== id);
+  localStorage.setItem("cartoes", JSON.stringify(cartoes));
+  salvarNoFirebase('cartoes', cartoes);
+  atualizarCartoes();
+  atualizarResumo();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function deletarCartao(id){
+  if(!confirm('Deseja realmente excluir este cartão?')) return;
+  cartoes = cartoes.filter(c => c.id !== id);
+  localStorage.setItem("cartoes", JSON.stringify(cartoes));
+  salvarNoFirebase('cartoes', cartoes);
+  atualizarCartoes();
+  atualizarResumo();
+}
+
+// ========== ATUALIZAR TABELA DE INVESTIMENTOS ==========
+function atualizarTabelaInvestimentos(){
+  const investimentosFiltrados = filtrarPorMesAno(investimentos);
+  const tbody = document.getElementById('tabelaInvestimentos');
+  
+  if(investimentosFiltrados.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhum investimento para este mês</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  investimentosFiltrados.forEach(i => {
+    const tipoCor = i.tipo === 'Investimento' ? 'primary' : 'success';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(i.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${i.nome}</td>
+      <td><span class="badge bg-${tipoCor}">${i.tipo}</span></td>
+      <td>${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-1" onclick="editarInvestimento(${i.id})" title="Editar">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deletarInvestimento(${i.id})" title="Excluir">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function editarInvestimento(id){
+  const inv = investimentos.find(i => i.id === id);
+  if(!inv) return;
+  
+  iNome.value  = inv.nome;
+  iTipo.value  = inv.tipo;
+  iValor.value = inv.valor;
+  iData.value  = inv.data;
+  
+  investimentos = investimentos.filter(i => i.id !== id);
+  localStorage.setItem("investimentos", JSON.stringify(investimentos));
+  salvarNoFirebase('investimentos', investimentos);
+  atualizarResumo();
+  atualizarTabelaInvestimentos();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function deletarInvestimento(id){
+  if(!confirm('Deseja realmente excluir este investimento?')) return;
+  investimentos = investimentos.filter(i => i.id !== id);
+  localStorage.setItem("investimentos", JSON.stringify(investimentos));
+  salvarNoFirebase('investimentos', investimentos);
+  atualizarResumo();
+  atualizarTabelaInvestimentos();
+}
+
+// ========== BACKUP E IMPORTAÇÃO ==========
+function exportarBackup(){
+  const dados = {
+    lancamentos: lancamentos,
+    cartoes: cartoes,
+    investimentos: investimentos,
+    emprestimos: emprestimos
+  };
+  const blob = new Blob([JSON.stringify(dados, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `backup-financeiro-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+function importarBackup(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = async function(event){
+    try {
+      const dados = JSON.parse(event.target.result);
+      if(dados.lancamentos)    { lancamentos    = dados.lancamentos;    localStorage.setItem("lancamentos",    JSON.stringify(lancamentos)); }
+      if(dados.cartoes)        { cartoes        = dados.cartoes;        localStorage.setItem("cartoes",        JSON.stringify(cartoes)); }
+      if(dados.investimentos)  { investimentos  = dados.investimentos;  localStorage.setItem("investimentos",  JSON.stringify(investimentos)); }
+      if(dados.emprestimos)    { emprestimos    = dados.emprestimos;    localStorage.setItem("emprestimos",    JSON.stringify(emprestimos)); }
+      // Salvar no Firebase tambem
+      await Promise.all([
+        salvarNoFirebase('lancamentos', lancamentos),
+        salvarNoFirebase('cartoes', cartoes),
+        salvarNoFirebase('investimentos', investimentos),
+        salvarNoFirebase('emprestimos', emprestimos)
+      ]);
+      alert('Backup importado e salvo no Firebase com sucesso!');
+      location.reload();
+    } catch(err) {
+      alert('Erro ao importar backup. Arquivo inválido.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ========== INICIALIZAÇÃO ==========
+atualizarResumo();
+atualizarTabelaLancamentos();
+atualizarCartoes();
+atualizarTabelaInvestimentos();
+atualizarSelectEmprestimos();
+
+// Iniciar sincronização Firebase APÓS todas as funções estarem definidas
+iniciarListeners();
+</script>
+
+</body>
+</html>
