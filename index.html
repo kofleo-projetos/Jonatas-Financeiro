@@ -526,11 +526,18 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
         <label>Valor da Fatura</label>
         <input type="number" id="cValor" class="form-control" placeholder="0.00">
       </div>
-      <div class="col-md-3 form-group">
+      <div class="col-md-2 form-group">
         <label>Data</label>
         <input type="date" id="cData" class="form-control">
       </div>
-      <div class="col-md-3 form-group d-flex align-items-end">
+      <div class="col-md-2 form-group">
+        <label>Status</label>
+        <select id="cStatus" class="form-control">
+          <option value="pago">Pago</option>
+          <option value="parcelado">Parcelado</option>
+        </select>
+      </div>
+      <div class="col-md-2 form-group d-flex align-items-end">
         <button class="btn btn-primary w-100" onclick="addCartao()">
           <i class="fa-solid fa-plus"></i> Adicionar
         </button>
@@ -588,6 +595,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
             <th>Data</th>
             <th>Banco</th>
             <th>Valor</th>
+            <th>Status</th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -1141,7 +1149,8 @@ function addCartao(){
     id: Date.now(),
     banco: cBanco.value,
     valor: parseFloat(cValor.value),
-    data: cData.value
+    data: cData.value,
+    status: cStatus.value
   });
   
   localStorage.setItem("cartoes", JSON.stringify(cartoes));
@@ -1250,10 +1259,27 @@ function atualizarResumo(){
   const res = investimentosFiltrados
     .filter(i => i.tipo === 'Reserva')
     .reduce((s, i) => s + i.valor, 0);
+
+  // ACUMULADO: Reserva e Investimento somam todos os meses anteriores (são acumulativos)
+  const mesAtual = document.getElementById('filtroMes').value;
+  const anoAtual = parseInt(document.getElementById('filtroAno').value);
+  let invAcumulado = inv;
+  let resAcumulado = res;
+
+  if(mesAtual !== 'todos'){
+    const mesAtualNum = parseInt(mesAtual);
+    investimentos.forEach(i => {
+      const d = new Date(i.data + 'T00:00:00');
+      const ano = d.getFullYear();
+      const mes = d.getMonth();
+      if(ano < anoAtual || (ano === anoAtual && mes < mesAtualNum)){
+        if(i.tipo === 'Investimento') invAcumulado += i.valor;
+        if(i.tipo === 'Reserva') resAcumulado += i.valor;
+      }
+    });
+  }
   
   // SALDO ANTERIOR (só calcula quando um mês específico está selecionado)
-  const mesAtual = document.getElementById('filtroMes').value; // "todos" ou "0"-"11"
-  const anoAtual = parseInt(document.getElementById('filtroAno').value);
   let saldoAnterior = 0;
 
   if(mesAtual !== 'todos'){
@@ -1286,17 +1312,6 @@ function atualizarResumo(){
         saldoAnterior -= c.valor;
       }
     });
-    
-    // Subtrair investimentos e reservas de todos os meses anteriores
-    investimentos.forEach(i => {
-      const d = new Date(i.data + 'T00:00:00');
-      const ano = d.getFullYear();
-      const mes = d.getMonth();
-      
-      if(ano < anoAtual || (ano === anoAtual && mes < mesAtualNum)){
-        saldoAnterior -= i.valor;
-      }
-    });
   }
 
   const receitaTotal = receita + saldoAnterior;
@@ -1306,8 +1321,8 @@ function atualizarResumo(){
   rReceita.innerText        = receita.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
   rSaldoAnterior.innerText  = saldoAnterior.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
   rReceitaTotal.innerText   = receitaTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-  rInvestimentos.innerText  = inv.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-  rReserva.innerText        = res.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  rInvestimentos.innerText  = invAcumulado.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  rReserva.innerText        = resAcumulado.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
   rDespesas.innerText       = despesasTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
   rSaldoFinal.innerText     = saldoFinal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
 
@@ -1318,7 +1333,7 @@ function atualizarResumo(){
     card.classList.add("saude-perigo");
     rSaude.innerText = "PERIGO";
     rSaudeDesc.innerText = "Saldo negativo. Risco financeiro alto!";
-  } else if(inv > 0 && res > 0 && saldoFinal >= 0){
+  } else if(invAcumulado > 0 && resAcumulado > 0 && saldoFinal >= 0){
     card.classList.add("saude-saudavel");
     rSaude.innerText = "SAUDÁVEL";
     rSaudeDesc.innerText = "Parabéns! Você investe e mantém reserva.";
@@ -1450,7 +1465,9 @@ function atualizarTabelaLancamentos(){
   }
 
   tbody.innerHTML = '';
-  lancamentosFiltrados.forEach(l => {
+  // Ordenar por data (mais antiga primeiro)
+  const lancamentosOrdenados = [...lancamentosFiltrados].sort((a, b) => new Date(a.data) - new Date(b.data));
+  lancamentosOrdenados.forEach(l => {
     const cor = l.tipo === 'entrada' ? 'success' : 'danger';
     let categoriaTexto = l.categoria;
     if(l.emprestimoOrigem){
@@ -1640,15 +1657,22 @@ function atualizarCartoes(){
   }
 
   tbody.innerHTML = '';
-  cartoesFiltrados.forEach(c => {
+  // Ordenar por data (mais antiga primeiro)
+  const cartoesOrdenados = [...cartoesFiltrados].sort((a, b) => new Date(a.data) - new Date(b.data));
+  cartoesOrdenados.forEach(c => {
+    const statusLabel = (c.status === 'parcelado') ? '<span style="color:#dc3545;font-weight:bold;">PARCELADO</span>' : '<span style="color:#28a745;font-weight:bold;">PAGO</span>';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${new Date(c.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
       <td>${c.banco}</td>
       <td>${c.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+      <td>${statusLabel}</td>
       <td>
         <button class="btn btn-sm btn-info me-1" onclick="editarCartao(${c.id})" title="Editar">
           <i class="fa-solid fa-pen-to-square"></i>
+        </button>
+        <button class="btn btn-sm ${c.status === 'parcelado' ? 'btn-danger' : 'btn-success'} me-1" onclick="toggleStatusCartao(${c.id})" title="${c.status === 'parcelado' ? 'Marcar como Pago' : 'Marcar como Parcelado'}">
+          <i class="fa-solid ${c.status === 'parcelado' ? 'fa-circle-xmark' : 'fa-circle-check'}"></i>
         </button>
         <button class="btn btn-sm btn-danger" onclick="deletarCartao(${c.id})" title="Excluir">
           <i class="fa-solid fa-trash-can"></i>
@@ -1659,13 +1683,23 @@ function atualizarCartoes(){
   });
 }
 
+function toggleStatusCartao(id){
+  const cartao = cartoes.find(c => c.id === id);
+  if(!cartao) return;
+  cartao.status = (cartao.status === 'parcelado') ? 'pago' : 'parcelado';
+  localStorage.setItem("cartoes", JSON.stringify(cartoes));
+  salvarNoFirebase('cartoes', cartoes);
+  atualizarCartoes();
+}
+
 function editarCartao(id){
   const cartao = cartoes.find(c => c.id === id);
   if(!cartao) return;
   
-  cBanco.value = cartao.banco;
-  cValor.value = cartao.valor;
-  cData.value  = cartao.data;
+  cBanco.value  = cartao.banco;
+  cValor.value  = cartao.valor;
+  cData.value   = cartao.data;
+  cStatus.value = cartao.status || 'pago';
   
   cartoes = cartoes.filter(c => c.id !== id);
   localStorage.setItem("cartoes", JSON.stringify(cartoes));
@@ -1695,7 +1729,9 @@ function atualizarTabelaInvestimentos(){
   }
 
   tbody.innerHTML = '';
-  investimentosFiltrados.forEach(i => {
+  // Ordenar por data (mais antiga primeiro)
+  const investimentosOrdenados = [...investimentosFiltrados].sort((a, b) => new Date(a.data) - new Date(b.data));
+  investimentosOrdenados.forEach(i => {
     const tipoCor = i.tipo === 'Investimento' ? 'primary' : 'success';
     const tr = document.createElement('tr');
     tr.innerHTML = `
