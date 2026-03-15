@@ -19,8 +19,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-  // Registrar plugin globalmente mas não ativar por padrão em todos os gráficos
-  // (vai ser ativado manualmente apenas no gráfico de cartões)
   const chartjsPluginDatalabels = window.ChartDataLabels;
 </script>
 
@@ -66,7 +64,6 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
 
 .main { margin-left:280px; padding:30px; }
 
-/* CARDS FINANCEIROS - GRID 3x3 */
 .card-fin {
   border:none; 
   border-radius:16px;
@@ -108,7 +105,6 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
   margin-top:8px;
 }
 
-/* CORES DOS ÍCONES */
 .icon-green { background:#d4edda; color:#28a745; }
 .icon-red { background:#f8d7da; color:#dc3545; }
 .icon-blue { background:#d1ecf1; color:#17a2b8; }
@@ -118,7 +114,6 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
 .icon-cyan { background:#d1ecf1; color:#0dcaf0; }
 .icon-yellow { background:#fff3cd; color:#ffc107; }
 
-/* SAÚDE FINANCEIRA */
 .saude-saudavel { background:#d4edda; color:#155724; }
 .saude-atencao { background:#fff3cd; color:#856404; }
 .saude-perigo { background:#f8d7da; color:#721c24; }
@@ -126,14 +121,12 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
 .form-group { margin-bottom:15px; }
 .hidden { display:none; }
 
-/* GRÁFICOS */
 .chart-container {
   position:relative;
   height:300px;
   margin-top:15px;
 }
 
-/* GRID 3x3 - Cartões do mesmo tamanho */
 .grid-3x3 {
   display:grid;
   grid-template-columns: repeat(3, 1fr);
@@ -141,7 +134,6 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
   margin-bottom:30px;
 }
 
-/* Barra de progresso customizada */
 .progress-parcela {
   height: 8px;
   border-radius: 10px;
@@ -152,27 +144,16 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
   background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
 }
 
-/* Badge de status da parcela */
 .badge-quitado { background: #28a745; }
 .badge-pendente { background: #ffc107; }
 
 @media (max-width: 992px) {
-  .grid-3x3 {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .grid-3x3 { grid-template-columns: repeat(2, 1fr); }
 }
-
 @media (max-width: 576px) {
-  .grid-3x3 {
-    grid-template-columns: 1fr;
-  }
-  .sidebar {
-    width:100%;
-    position:relative;
-  }
-  .main {
-    margin-left:0;
-  }
+  .grid-3x3 { grid-template-columns: 1fr; }
+  .sidebar { width:100%; position:relative; }
+  .main { margin-left:0; }
 }
 </style>
 </head>
@@ -202,7 +183,6 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
     <i class="fa-solid fa-book-open"></i> Tutorial
   </a>
 
-  <!-- FILTRO GLOBAL -->
   <div class="filtros">
     <label>MÊS / ANO</label>
     <select id="filtroMes" onchange="aplicarFiltro()">
@@ -221,7 +201,6 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
       <option value="11">Dezembro</option>
     </select>
     <select id="filtroAno" onchange="aplicarFiltro()">
-      <!-- Populado dinamicamente pelo JS -->
     </select>
   </div>
 
@@ -232,83 +211,51 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
 
 <div class="main">
 
-<!-- ================= RESUMO ================= -->
+<!-- RESUMO -->
 <div id="resumo">
-  <h3 class="mb-4">
-    <i class="fa-solid fa-gauge-high"></i> Resumo Financeiro
-  </h3>
-
-  <!-- GRID 3x3 -->
+  <h3 class="mb-4"><i class="fa-solid fa-gauge-high"></i> Resumo Financeiro</h3>
   <div class="grid-3x3">
-    
-    <!-- LINHA 1 -->
     <div class="card-fin p-3">
-      <div class="icon-circle icon-green">
-        <i class="fa-solid fa-circle-dollar-to-slot"></i>
-      </div>
+      <div class="icon-circle icon-green"><i class="fa-solid fa-circle-dollar-to-slot"></i></div>
       <h6>Receita do Mês</h6>
       <h4 id="rReceita">R$ 0,00</h4>
     </div>
-
     <div class="card-fin p-3">
-      <div class="icon-circle icon-blue">
-        <i class="fa-solid fa-clock-rotate-left"></i>
-      </div>
+      <div class="icon-circle icon-blue"><i class="fa-solid fa-clock-rotate-left"></i></div>
       <h6>Saldo Anterior</h6>
       <h4 id="rSaldoAnterior">R$ 0,00</h4>
     </div>
-
     <div class="card-fin p-3">
-      <div class="icon-circle icon-purple">
-        <i class="fa-solid fa-coins"></i>
-      </div>
+      <div class="icon-circle icon-purple"><i class="fa-solid fa-coins"></i></div>
       <h6>Receita Total</h6>
       <h4 id="rReceitaTotal">R$ 0,00</h4>
     </div>
-
-    <!-- LINHA 2 -->
     <div class="card-fin p-3">
-      <div class="icon-circle icon-purple">
-        <i class="fa-solid fa-sack-dollar"></i>
-      </div>
+      <div class="icon-circle icon-purple"><i class="fa-solid fa-sack-dollar"></i></div>
       <h6>Investimentos do Mês</h6>
       <h4 id="rInvestimentos">R$ 0,00</h4>
     </div>
-
     <div class="card-fin p-3">
-      <div class="icon-circle icon-darkgreen">
-        <i class="fa-solid fa-shield-halved"></i>
-      </div>
+      <div class="icon-circle icon-darkgreen"><i class="fa-solid fa-shield-halved"></i></div>
       <h6>Reserva de Emergência</h6>
       <h4 id="rReserva">R$ 0,00</h4>
     </div>
-
     <div class="card-fin p-3">
-      <div class="icon-circle icon-red">
-        <i class="fa-solid fa-money-bill-wave"></i>
-      </div>
+      <div class="icon-circle icon-red"><i class="fa-solid fa-money-bill-wave"></i></div>
       <h6>Despesas do Mês</h6>
       <h4 id="rDespesas">R$ 0,00</h4>
     </div>
-
-    <!-- LINHA 3 -->
     <div class="card-fin p-3">
-      <div class="icon-circle icon-blue">
-        <i class="fa-solid fa-wallet"></i>
-      </div>
+      <div class="icon-circle icon-blue"><i class="fa-solid fa-wallet"></i></div>
       <h6>Saldo Final do Mês</h6>
       <h4 id="rSaldoFinal">R$ 0,00</h4>
     </div>
-
     <div class="card-fin p-3">
-      <div class="icon-circle icon-orange">
-        <i class="fa-solid fa-clock"></i>
-      </div>
+      <div class="icon-circle icon-orange"><i class="fa-solid fa-clock"></i></div>
       <h6>Próximo Empréstimo a Quitar</h6>
       <h4 id="rProxEmprestimo">-</h4>
       <small id="rProxEmprestimoDesc">Nenhum empréstimo ativo</small>
     </div>
-
     <div id="cardSaude" class="card-fin p-3 saude-atencao">
       <div class="icon-circle" style="background:transparent;">
         <i class="fa-solid fa-heart-circle-bolt" style="font-size:28px;"></i>
@@ -319,7 +266,6 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
     </div>
   </div>
 
-  <!-- GRÁFICOS -->
   <div class="row g-4 mt-3">
     <div class="col-lg-6">
       <div class="card-fin p-4">
@@ -329,7 +275,6 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
         </div>
       </div>
     </div>
-
     <div class="col-lg-6">
       <div class="card-fin p-4">
         <h5><i class="fa-solid fa-chart-line"></i> Saldo Final Mensal</h5>
@@ -341,7 +286,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
   </div>
 </div>
 
-<!-- ================= LANÇAMENTOS ================= -->
+<!-- LANÇAMENTOS -->
 <div id="lancamentos" class="hidden">
   <div class="card-fin p-4">
     <h5><i class="fa-solid fa-circle-plus"></i> Novo Lançamento</h5>
@@ -379,7 +324,6 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
         <input type="date" id="lData" class="form-control">
       </div>
     </div>
-
     <div class="row hidden" id="emprestimoExtra">
       <div class="col-md-6 form-group">
         <label>Selecione o Empréstimo</label>
@@ -388,25 +332,17 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
         </select>
       </div>
     </div>
-
     <button class="btn btn-success" onclick="addLancamento()">
       <i class="fa-solid fa-check"></i> Salvar Lançamento
     </button>
   </div>
-
-  <!-- LISTA DE LANÇAMENTOS -->
   <div class="card-fin p-4 mt-4">
     <h5><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Lançamentos</h5>
     <div class="table-responsive mt-3">
       <table class="table table-hover">
         <thead>
           <tr>
-            <th>Data</th>
-            <th>Descrição</th>
-            <th>Categoria</th>
-            <th>Tipo</th>
-            <th>Valor</th>
-            <th>Ações</th>
+            <th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Ações</th>
           </tr>
         </thead>
         <tbody id="tabelaLancamentos">
@@ -417,7 +353,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
   </div>
 </div>
 
-<!-- ================= EMPRÉSTIMOS ================= -->
+<!-- EMPRÉSTIMOS -->
 <div id="emprestimos" class="hidden">
   <div class="card-fin p-4 mb-4">
     <h5><i class="fa-solid fa-hand-holding-dollar"></i> Cadastrar Empréstimo</h5>
@@ -445,14 +381,10 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
       </div>
     </div>
   </div>
-
-  <!-- CARDS INFORMATIVOS -->
   <div class="row g-4 mb-4">
     <div class="col-md-4">
       <div class="card-fin p-3">
-        <div class="icon-circle icon-red">
-          <i class="fa-solid fa-money-bill-trend-up"></i>
-        </div>
+        <div class="icon-circle icon-red"><i class="fa-solid fa-money-bill-trend-up"></i></div>
         <h6>Total Empréstimos do Mês</h6>
         <h4 id="eTotalMes">R$ 0,00</h4>
         <small>Parcelas pagas no mês</small>
@@ -460,9 +392,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
     </div>
     <div class="col-md-4">
       <div class="card-fin p-3">
-        <div class="icon-circle icon-green">
-          <i class="fa-solid fa-check-circle"></i>
-        </div>
+        <div class="icon-circle icon-green"><i class="fa-solid fa-check-circle"></i></div>
         <h6>Próximo a Quitar</h6>
         <h4 id="eProximo">-</h4>
         <small id="eProximoDesc">Nenhum empréstimo ativo</small>
@@ -470,39 +400,27 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
     </div>
     <div class="col-md-4">
       <div class="card-fin p-3">
-        <div class="icon-circle icon-orange">
-          <i class="fa-solid fa-hourglass-half"></i>
-        </div>
+        <div class="icon-circle icon-orange"><i class="fa-solid fa-hourglass-half"></i></div>
         <h6>Mais Longo a Quitar</h6>
         <h4 id="eLongo">-</h4>
         <small id="eLongoDesc">Nenhum empréstimo ativo</small>
       </div>
     </div>
   </div>
-
-  <!-- GRÁFICO DE EVOLUÇÃO -->
   <div class="card-fin p-4 mb-4">
     <h5><i class="fa-solid fa-chart-line"></i> Evolução Mensal de Empréstimos</h5>
     <div class="chart-container">
       <canvas id="graficoEmprestimos"></canvas>
     </div>
   </div>
-
-  <!-- HISTÓRICO DE EMPRÉSTIMOS -->
   <div class="card-fin p-4">
     <h5><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Empréstimos</h5>
     <div class="table-responsive mt-3">
       <table class="table table-hover">
         <thead>
           <tr>
-            <th>Origem</th>
-            <th>Valor Total</th>
-            <th>Valor Parcela</th>
-            <th>Parcelas Pagas</th>
-            <th>Total de Parcelas</th>
-            <th>Saldo Restante</th>
-            <th>Progresso</th>
-            <th>Ações</th>
+            <th>Origem</th><th>Valor Total</th><th>Valor Parcela</th><th>Parcelas Pagas</th>
+            <th>Total de Parcelas</th><th>Saldo Restante</th><th>Progresso</th><th>Ações</th>
           </tr>
         </thead>
         <tbody id="tabelaEmprestimos">
@@ -513,7 +431,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
   </div>
 </div>
 
-<!-- ================= CARTÕES ================= -->
+<!-- CARTÕES -->
 <div id="cartoes" class="hidden">
   <div class="card-fin p-4 mb-4">
     <h5><i class="fa-solid fa-credit-card"></i> Adicionar Cartão</h5>
@@ -530,9 +448,14 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
         <label>Data</label>
         <input type="date" id="cData" class="form-control">
       </div>
+      <!-- ============================================================
+           ALTERAÇÃO 1: Adicionada opção "Em Aberto" como primeira
+           opção do select de status ao cadastrar cartão
+      ============================================================ -->
       <div class="col-md-2 form-group">
         <label>Status</label>
         <select id="cStatus" class="form-control">
+          <option value="em_aberto">Em Aberto</option>
           <option value="pago">Pago</option>
           <option value="parcelado">Parcelado</option>
         </select>
@@ -548,9 +471,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
   <div class="row g-4 mb-4">
     <div class="col-md-4">
       <div class="card-fin p-3">
-        <div class="icon-circle icon-red">
-          <i class="fa-solid fa-money-bill-trend-up"></i>
-        </div>
+        <div class="icon-circle icon-red"><i class="fa-solid fa-money-bill-trend-up"></i></div>
         <h6>Gasto Total do Mês</h6>
         <h4 id="cTotal">R$ 0,00</h4>
         <small>Lançamentos + Cartões</small>
@@ -558,9 +479,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
     </div>
     <div class="col-md-4">
       <div class="card-fin p-3">
-        <div class="icon-circle icon-cyan">
-          <i class="fa-solid fa-credit-card"></i>
-        </div>
+        <div class="icon-circle icon-cyan"><i class="fa-solid fa-credit-card"></i></div>
         <h6>Maior Fatura</h6>
         <h4 id="cMaior">-</h4>
         <small id="cMaiorDesc">Nenhum cartão</small>
@@ -568,9 +487,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
     </div>
     <div class="col-md-4">
       <div class="card-fin p-3">
-        <div class="icon-circle icon-orange">
-          <i class="fa-solid fa-calendar-check"></i>
-        </div>
+        <div class="icon-circle icon-orange"><i class="fa-solid fa-calendar-check"></i></div>
         <h6>Gasto Total do Ano</h6>
         <h4 id="cTotalAno">R$ 0,00</h4>
         <small>Todos os meses do ano</small>
@@ -585,29 +502,24 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
     </div>
   </div>
 
-  <!-- HISTÓRICO DE CARTÕES -->
   <div class="card-fin p-4">
     <h5><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Cartões</h5>
     <div class="table-responsive mt-3">
       <table class="table table-hover">
         <thead>
           <tr>
-            <th>Data</th>
-            <th>Banco</th>
-            <th>Valor</th>
-            <th>Status</th>
-            <th>Ações</th>
+            <th>Data</th><th>Banco</th><th>Valor</th><th>Status</th><th>Ações</th>
           </tr>
         </thead>
         <tbody id="tabelaCartoes">
-          <tr><td colspan="4" class="text-center text-muted">Nenhum cartão cadastrado</td></tr>
+          <tr><td colspan="5" class="text-center text-muted">Nenhum cartão cadastrado</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
 
-<!-- ================= INVESTIMENTOS ================= -->
+<!-- INVESTIMENTOS -->
 <div id="investimentos" class="hidden">
   <div class="card-fin p-4">
     <h5><i class="fa-solid fa-chart-line-up"></i> Investimentos e Reserva</h5>
@@ -638,19 +550,13 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
       </div>
     </div>
   </div>
-
-  <!-- HISTÓRICO DE INVESTIMENTOS -->
   <div class="card-fin p-4 mt-4">
     <h5><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Investimentos</h5>
     <div class="table-responsive mt-3">
       <table class="table table-hover">
         <thead>
           <tr>
-            <th>Data</th>
-            <th>Nome</th>
-            <th>Tipo</th>
-            <th>Valor</th>
-            <th>Ações</th>
+            <th>Data</th><th>Nome</th><th>Tipo</th><th>Valor</th><th>Ações</th>
           </tr>
         </thead>
         <tbody id="tabelaInvestimentos">
@@ -661,32 +567,25 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
   </div>
 </div>
 
-<!-- ================= TUTORIAL ================= -->
+<!-- TUTORIAL -->
 <div id="tutorial" class="hidden">
   <div class="card-fin p-4">
     <h5><i class="fa-solid fa-book-open"></i> Como usar o sistema</h5>
     <div class="mt-3">
       <h6><i class="fa-solid fa-chart-pie text-primary"></i> Resumo</h6>
       <p>Visão geral das suas finanças com 9 indicadores principais, incluindo receita, despesas, investimentos e saúde financeira.</p>
-      
       <h6 class="mt-4"><i class="fa-solid fa-plus-circle text-success"></i> Lançamentos</h6>
       <p>Registre todas as suas entradas e saídas. Categorize seus gastos para melhor análise.</p>
-      
       <h6 class="mt-4"><i class="fa-solid fa-hand-holding-dollar text-warning"></i> Empréstimos</h6>
       <p>Cadastre seus empréstimos com origem, valor total e parcelas. Ao lançar pagamentos na aba Lançamentos, selecione o empréstimo correspondente para dar baixa automática nas parcelas.</p>
-      
       <h6 class="mt-4"><i class="fa-solid fa-credit-card text-info"></i> Cartões</h6>
-      <p>Controle as faturas dos seus cartões de crédito mês a mês.</p>
-      
+      <p>Controle as faturas dos seus cartões de crédito mês a mês. Ao adicionar um cartão, o status inicial será <strong>Em Aberto</strong>. Use o botão de status na tabela para alternar entre <strong>Em Aberto → Pago → Parcelado</strong>.</p>
       <h6 class="mt-4"><i class="fa-solid fa-piggy-bank text-warning"></i> Investimentos</h6>
       <p>Acompanhe seus investimentos e reserva de emergência para garantir segurança financeira.</p>
-      
       <h6 class="mt-4"><i class="fa-solid fa-filter text-secondary"></i> Filtros</h6>
       <p>Use os filtros de mês e ano na barra lateral para navegar entre diferentes períodos.</p>
     </div>
   </div>
-
-  <!-- FERRAMENTAS DE BACKUP -->
   <div class="card-fin p-4 mt-4">
     <h5><i class="fa-solid fa-database"></i> Backup e Importação</h5>
     <p class="text-muted">Faça backup dos seus dados financeiros ou importe dados de um backup anterior.</p>
@@ -706,7 +605,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
   </div>
 </div>
 
-</div>
+</div><!-- fim .main -->
 
 <script>
 // ========== CONFIGURAÇÃO FIREBASE ==========
@@ -719,28 +618,19 @@ const firebaseConfig = {
   appId: "1:532447975595:web:5082f8c5f65ed06efd3fee"
 };
 
-// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // ========== VARIÁVEIS GLOBAIS ==========
-// IMPORTANTE: declaradas ANTES de qualquer chamada ao Firebase para evitar race condition
-let lancamentos = JSON.parse(localStorage.getItem("lancamentos")) || [];
-let cartoes = JSON.parse(localStorage.getItem("cartoes")) || [];
-let investimentos = JSON.parse(localStorage.getItem("investimentos")) || [];
-let emprestimos = JSON.parse(localStorage.getItem("emprestimos")) || [];
+let lancamentos  = JSON.parse(localStorage.getItem("lancamentos"))  || [];
+let cartoes      = JSON.parse(localStorage.getItem("cartoes"))      || [];
+let investimentos= JSON.parse(localStorage.getItem("investimentos"))|| [];
+let emprestimos  = JSON.parse(localStorage.getItem("emprestimos"))  || [];
 
-// ========== ID DE SESSÃO COMPARTILHADA ==========
-// Permite sincronizar entre dispositivos usando um código comum
-// ID fixo vinculado aos seus dados no Firebase
-// Este ID nunca muda, mesmo que o cache seja limpo
 const ID_FIREBASE_FIXO = 'jonatas_principal';
 let deviceId = ID_FIREBASE_FIXO;
 
-// Exibir ID de sessão na interface (será inserido no sidebar)
-// ========== FORCAR LEITURA DO FIREBASE ==========
-
-// ========== FUNÇÕES DE SINCRONIZAÇÃO FIREBASE ==========
+// ========== FIREBASE ==========
 async function salvarNoFirebase(colecao, dados) {
   try {
     await db.collection(colecao).doc(deviceId).set({
@@ -753,19 +643,17 @@ async function salvarNoFirebase(colecao, dados) {
   }
 }
 
-// Listeners em tempo real (onSnapshot) — substituem o get() único
 let _unsubscribers = [];
 
 function iniciarListeners() {
-  // Cancelar listeners anteriores se houver
   _unsubscribers.forEach(fn => fn());
   _unsubscribers = [];
 
   const colecoes = [
-    { nome: 'lancamentos', setter: (v) => { lancamentos = v; localStorage.setItem("lancamentos", JSON.stringify(v)); } },
-    { nome: 'cartoes',     setter: (v) => { cartoes = v;     localStorage.setItem("cartoes", JSON.stringify(v)); } },
-    { nome: 'investimentos', setter: (v) => { investimentos = v; localStorage.setItem("investimentos", JSON.stringify(v)); } },
-    { nome: 'emprestimos', setter: (v) => { emprestimos = v; localStorage.setItem("emprestimos", JSON.stringify(v)); } },
+    { nome: 'lancamentos',  setter: (v) => { lancamentos   = v; localStorage.setItem("lancamentos",   JSON.stringify(v)); } },
+    { nome: 'cartoes',      setter: (v) => { cartoes       = v; localStorage.setItem("cartoes",       JSON.stringify(v)); } },
+    { nome: 'investimentos',setter: (v) => { investimentos = v; localStorage.setItem("investimentos", JSON.stringify(v)); } },
+    { nome: 'emprestimos',  setter: (v) => { emprestimos   = v; localStorage.setItem("emprestimos",   JSON.stringify(v)); } },
   ];
 
   let prontos = 0;
@@ -785,19 +673,12 @@ function iniciarListeners() {
     const unsub = db.collection(nome).doc(deviceId).onSnapshot(doc => {
       if (doc.exists && doc.data() && doc.data().items) {
         setter(doc.data().items);
-        console.log(`✓ ${nome} carregado:`, doc.data().items.length, 'itens');
-      } else {
-        console.log(`ℹ ${nome}: documento não encontrado ou vazio`);
       }
       prontos++;
-      // Atualizar interface a cada coleção que chegar (não espera todas)
       atualizarInterface();
-      if (prontos === total) {
-        console.log('✓ Todos os listeners Firebase ativos!');
-      }
+      if (prontos === total) console.log('✓ Todos os listeners Firebase ativos!');
     }, error => {
       console.error(`Erro no listener ${nome}:`, error);
-      // Mesmo com erro, incrementa prontos para não travar
       prontos++;
       atualizarInterface();
     });
@@ -807,75 +688,50 @@ function iniciarListeners() {
 
 let grafReceitaDespesa, grafSaldoFinal, grafCartoes, grafEmprestimos;
 
-// Definir data atual nos campos
 document.getElementById('lData').valueAsDate = new Date();
 document.getElementById('cData').valueAsDate = new Date();
 document.getElementById('iData').valueAsDate = new Date();
 document.getElementById('eData').valueAsDate = new Date();
 
-// Construir filtro de anos dinamicamente e selecionar mês atual
 const hoje = new Date();
 reconstruirFiltroAnos();
 document.getElementById('filtroMes').value = hoje.getMonth();
 
-// ========== NAVEGAÇÃO ENTRE ABAS ==========
+// ========== NAVEGAÇÃO ==========
 function showTab(id, el){
-  document.querySelectorAll('.main > div').forEach(d=>d.classList.add('hidden'));
+  document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
-  document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
   el.classList.add('active');
-  
-  if(id === 'resumo') atualizarResumo();
-  if(id === 'lancamentos') {
-    atualizarTabelaLancamentos();
-    atualizarSelectEmprestimos();
-  }
-  if(id === 'emprestimos') atualizarEmprestimos();
-  if(id === 'cartoes') atualizarCartoes();
+  if(id === 'resumo')        atualizarResumo();
+  if(id === 'lancamentos')  { atualizarTabelaLancamentos(); atualizarSelectEmprestimos(); }
+  if(id === 'emprestimos')   atualizarEmprestimos();
+  if(id === 'cartoes')       atualizarCartoes();
   if(id === 'investimentos') atualizarTabelaInvestimentos();
 }
 
-// ========== TOGGLE CATEGORIA / EMPRÉSTIMO ==========
 function toggleCategoriaEmprestimo(){
   const tipo = document.getElementById('lTipo').value;
-  const categoriaWrapper = document.getElementById('categoriaWrapper');
-  const emprestimoExtra = document.getElementById('emprestimoExtra');
-
-  // Se for entrada, esconde Categoria e Empréstimo
-  if(tipo === 'entrada'){
-    categoriaWrapper.classList.add('hidden');
-    emprestimoExtra.classList.add('hidden');
-  } else {
-    categoriaWrapper.classList.remove('hidden');
-    // Empréstimo só aparece se Saída + Categoria = Empréstimo
-    emprestimoExtra.classList.toggle('hidden', document.getElementById('lCategoria').value !== 'Empréstimo');
-  }
+  document.getElementById('categoriaWrapper').classList.toggle('hidden', tipo === 'entrada');
+  document.getElementById('emprestimoExtra').classList.toggle('hidden',
+    tipo === 'entrada' || document.getElementById('lCategoria').value !== 'Empréstimo');
 }
 
-// ========== ATUALIZAR SELECT DE EMPRÉSTIMOS ==========
 function atualizarSelectEmprestimos(){
   const select = document.getElementById('lEmprestimoSelect');
   select.innerHTML = '<option value="">-- Selecione um empréstimo --</option>';
-  
-  // Apenas empréstimos ativos (com parcelas pendentes)
-  const emprestimosAtivos = emprestimos.filter(e => e.parcelasPagas < e.totalParcelas);
-  
-  emprestimosAtivos.forEach(emp => {
+  emprestimos.filter(e => e.parcelasPagas < e.totalParcelas).forEach(emp => {
     const opt = document.createElement('option');
     opt.value = emp.id;
-    const valorParcela = emp.valorTotal / emp.totalParcelas;
-    opt.textContent = `${emp.origem} - ${emp.parcelasPagas}/${emp.totalParcelas} - R$ ${valorParcela.toFixed(2)}/parcela`;
+    const vp = emp.valorTotal / emp.totalParcelas;
+    opt.textContent = `${emp.origem} - ${emp.parcelasPagas}/${emp.totalParcelas} - R$ ${vp.toFixed(2)}/parcela`;
     select.appendChild(opt);
   });
 }
 
-// ========== ADICIONAR LANÇAMENTO ==========
+// ========== LANÇAMENTOS ==========
 function addLancamento(){
-  if(!lDesc.value || !lValor.value || !lData.value){
-    alert('Preencha todos os campos obrigatórios!');
-    return;
-  }
-
+  if(!lDesc.value || !lValor.value || !lData.value){ alert('Preencha todos os campos obrigatórios!'); return; }
   const lancamento = {
     id: Date.now(),
     descricao: lDesc.value,
@@ -884,888 +740,193 @@ function addLancamento(){
     valor: parseFloat(lValor.value),
     data: lData.value
   };
-
-  // Se for empréstimo, vincular ao empréstimo selecionado
   if(lCategoria.value === 'Empréstimo' && lTipo.value === 'saida'){
     const emprestimoId = parseInt(lEmprestimoSelect.value);
-    if(!emprestimoId){
-      alert('Selecione um empréstimo para dar baixa!');
-      return;
-    }
-    
+    if(!emprestimoId){ alert('Selecione um empréstimo para dar baixa!'); return; }
     const emprestimo = emprestimos.find(e => e.id === emprestimoId);
-    if(!emprestimo){
-      alert('Empréstimo não encontrado!');
-      return;
-    }
-    
-    // Verificar se ainda há parcelas a pagar
-    if(emprestimo.parcelasPagas >= emprestimo.totalParcelas){
-      alert('Este empréstimo já foi totalmente quitado!');
-      return;
-    }
-    
-    // Dar baixa na parcela
+    if(!emprestimo){ alert('Empréstimo não encontrado!'); return; }
+    if(emprestimo.parcelasPagas >= emprestimo.totalParcelas){ alert('Este empréstimo já foi totalmente quitado!'); return; }
     emprestimo.parcelasPagas += 1;
     lancamento.emprestimoId = emprestimoId;
     lancamento.emprestimoOrigem = emprestimo.origem;
-    
     localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
     salvarNoFirebase('emprestimos', emprestimos);
   }
-
   lancamentos.push(lancamento);
   localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
   salvarNoFirebase('lancamentos', lancamentos);
-  
-  // Limpar campos
-  lDesc.value = '';
-  lValor.value = '';
-  lEmprestimoSelect.value = '';
-  
+  lDesc.value = ''; lValor.value = ''; lEmprestimoSelect.value = '';
   reconstruirFiltroAnos();
-  atualizarResumo();
-  atualizarTabelaLancamentos();
-  atualizarSelectEmprestimos();
+  atualizarResumo(); atualizarTabelaLancamentos(); atualizarSelectEmprestimos();
   alert('Lançamento adicionado com sucesso!');
 }
 
-// ========== ADICIONAR EMPRÉSTIMO ==========
-function addEmprestimo(){
-  if(!eOrigem.value || !eValorTotal.value || !eParcelas.value || !eData.value){
-    alert('Preencha todos os campos!');
-    return;
+function editarLancamento(id){
+  const l = lancamentos.find(l => l.id === id);
+  if(!l) return;
+  lDesc.value = l.descricao; lTipo.value = l.tipo; lValor.value = l.valor; lData.value = l.data;
+  toggleCategoriaEmprestimo();
+  if(l.tipo === 'saida'){
+    lCategoria.value = l.categoria;
+    if(l.categoria === 'Empréstimo' && l.emprestimoId){
+      document.getElementById('emprestimoExtra').classList.remove('hidden');
+      lEmprestimoSelect.value = l.emprestimoId;
+      const emp = emprestimos.find(e => e.id === l.emprestimoId);
+      if(emp && emp.parcelasPagas > 0){ emp.parcelasPagas -= 1; localStorage.setItem("emprestimos", JSON.stringify(emprestimos)); salvarNoFirebase('emprestimos', emprestimos); }
+    }
   }
+  lancamentos = lancamentos.filter(l => l.id !== id);
+  localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+  salvarNoFirebase('lancamentos', lancamentos);
+  atualizarResumo(); atualizarTabelaLancamentos(); atualizarSelectEmprestimos();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
 
-  const valorTotal = parseFloat(eValorTotal.value);
-  const totalParcelas = parseInt(eParcelas.value);
-
-  if(totalParcelas <= 0){
-    alert('O número de parcelas deve ser maior que zero!');
-    return;
+function deletarLancamento(id){
+  const l = lancamentos.find(l => l.id === id);
+  if(!l || !confirm('Deseja realmente excluir este lançamento?')) return;
+  if(l.emprestimoId){
+    const emp = emprestimos.find(e => e.id === l.emprestimoId);
+    if(emp && emp.parcelasPagas > 0){ emp.parcelasPagas -= 1; localStorage.setItem("emprestimos", JSON.stringify(emprestimos)); salvarNoFirebase('emprestimos', emprestimos); }
   }
+  lancamentos = lancamentos.filter(l => l.id !== id);
+  localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+  salvarNoFirebase('lancamentos', lancamentos);
+  atualizarResumo(); atualizarTabelaLancamentos(); atualizarSelectEmprestimos();
+}
 
-  emprestimos.push({
-    id: Date.now(),
-    origem: eOrigem.value,
-    valorTotal: valorTotal,
-    totalParcelas: totalParcelas,
-    parcelasPagas: 0,
-    dataInicio: eData.value
+function atualizarTabelaLancamentos(){
+  const lf = filtrarPorMesAno(lancamentos);
+  const tbody = document.getElementById('tabelaLancamentos');
+  if(lf.length === 0){ tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhum lançamento para este mês</td></tr>'; return; }
+  tbody.innerHTML = '';
+  [...lf].sort((a,b) => new Date(a.data)-new Date(b.data)).forEach(l => {
+    const cor = l.tipo === 'entrada' ? 'success' : 'danger';
+    let catTexto = l.categoria + (l.emprestimoOrigem ? ` (${l.emprestimoOrigem})` : '');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(l.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${l.descricao}</td>
+      <td><span class="badge bg-secondary">${catTexto}</span></td>
+      <td><span class="badge bg-${cor}">${l.tipo==='entrada'?'Entrada':'Saída'}</span></td>
+      <td>${l.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-1" onclick="editarLancamento(${l.id})"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="deletarLancamento(${l.id})"><i class="fa-solid fa-trash-can"></i></button>
+      </td>`;
+    tbody.appendChild(tr);
   });
-  
+}
+
+// ========== EMPRÉSTIMOS ==========
+function addEmprestimo(){
+  if(!eOrigem.value || !eValorTotal.value || !eParcelas.value || !eData.value){ alert('Preencha todos os campos!'); return; }
+  const tp = parseInt(eParcelas.value);
+  if(tp <= 0){ alert('O número de parcelas deve ser maior que zero!'); return; }
+  emprestimos.push({ id: Date.now(), origem: eOrigem.value, valorTotal: parseFloat(eValorTotal.value), totalParcelas: tp, parcelasPagas: 0, dataInicio: eData.value });
   localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
   salvarNoFirebase('emprestimos', emprestimos);
-  
-  eOrigem.value = '';
-  eValorTotal.value = '';
-  eParcelas.value = '';
-  
-  reconstruirFiltroAnos();
-  atualizarEmprestimos();
+  eOrigem.value = ''; eValorTotal.value = ''; eParcelas.value = '';
+  reconstruirFiltroAnos(); atualizarEmprestimos();
   alert('Empréstimo cadastrado com sucesso!');
 }
 
-// ========== ATUALIZAR ABA EMPRÉSTIMOS ==========
 function atualizarEmprestimos(){
-  // CARDS INFORMATIVOS
   const ano = parseInt(document.getElementById('filtroAno').value);
   const mes = document.getElementById('filtroMes').value;
-  
-  // Total de empréstimos pagos no mês
   let totalMes = 0;
   lancamentos.forEach(l => {
     if(l.categoria === 'Empréstimo' && l.emprestimoId){
-      const d = new Date(l.data + 'T00:00:00');
-      const mesOk = mes === 'todos' ? true : d.getMonth() === parseInt(mes);
-      const anoOk = d.getFullYear() === ano;
-      if(mesOk && anoOk) totalMes += l.valor;
+      const d = new Date(l.data+'T00:00:00');
+      if((mes === 'todos' || d.getMonth() === parseInt(mes)) && d.getFullYear() === ano) totalMes += l.valor;
     }
   });
-  
-  document.getElementById('eTotalMes').innerText = totalMes.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-  
-  // Empréstimo mais próximo de quitar e mais longo
-  const emprestimosAtivos = emprestimos.filter(e => e.parcelasPagas < e.totalParcelas);
-  
-  if(emprestimosAtivos.length > 0){
-    // Ordenar por parcelas restantes (crescente)
-    const porProximidade = [...emprestimosAtivos].sort((a, b) => {
-      const restanteA = a.totalParcelas - a.parcelasPagas;
-      const restanteB = b.totalParcelas - b.parcelasPagas;
-      return restanteA - restanteB;
-    });
-    
-    const proximo = porProximidade[0];
-    const restanteProx = proximo.totalParcelas - proximo.parcelasPagas;
-    document.getElementById('eProximo').innerText = proximo.origem;
-    document.getElementById('eProximoDesc').innerText = `${restanteProx} ${restanteProx === 1 ? 'parcela restante' : 'parcelas restantes'}`;
-    
-    const longo = porProximidade[porProximidade.length - 1];
-    const restanteLongo = longo.totalParcelas - longo.parcelasPagas;
-    document.getElementById('eLongo').innerText = longo.origem;
-    document.getElementById('eLongoDesc').innerText = `${restanteLongo} ${restanteLongo === 1 ? 'parcela restante' : 'parcelas restantes'}`;
+  document.getElementById('eTotalMes').innerText = totalMes.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const ativos = emprestimos.filter(e => e.parcelasPagas < e.totalParcelas);
+  if(ativos.length > 0){
+    const sorted = [...ativos].sort((a,b) => (a.totalParcelas-a.parcelasPagas)-(b.totalParcelas-b.parcelasPagas));
+    const prox = sorted[0]; const restProx = prox.totalParcelas - prox.parcelasPagas;
+    document.getElementById('eProximo').innerText = prox.origem;
+    document.getElementById('eProximoDesc').innerText = `${restProx} ${restProx===1?'parcela restante':'parcelas restantes'}`;
+    const long = sorted[sorted.length-1]; const restLong = long.totalParcelas - long.parcelasPagas;
+    document.getElementById('eLongo').innerText = long.origem;
+    document.getElementById('eLongoDesc').innerText = `${restLong} ${restLong===1?'parcela restante':'parcelas restantes'}`;
   } else {
-    document.getElementById('eProximo').innerText = '-';
-    document.getElementById('eProximoDesc').innerText = 'Nenhum empréstimo ativo';
-    document.getElementById('eLongo').innerText = '-';
-    document.getElementById('eLongoDesc').innerText = 'Nenhum empréstimo ativo';
+    ['eProximo','eLongo'].forEach(id => document.getElementById(id).innerText = '-');
+    ['eProximoDesc','eLongoDesc'].forEach(id => document.getElementById(id).innerText = 'Nenhum empréstimo ativo');
   }
-  
-  // GRÁFICO DE EVOLUÇÃO MENSAL
   atualizarGraficoEmprestimos();
-  
-  // TABELA DE EMPRÉSTIMOS
   atualizarTabelaEmprestimos();
 }
 
-// ========== GRÁFICO DE EMPRÉSTIMOS ==========
 function atualizarGraficoEmprestimos(){
-  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   const ano = parseInt(document.getElementById('filtroAno').value);
   const pagosPorMes = Array(12).fill(0);
-  
-  // Contar valores pagos por mês
   lancamentos.forEach(l => {
     if(l.categoria === 'Empréstimo' && l.emprestimoId){
-      const d = new Date(l.data + 'T00:00:00');
-      if(d.getFullYear() === ano){
-        pagosPorMes[d.getMonth()] += l.valor;
-      }
+      const d = new Date(l.data+'T00:00:00');
+      if(d.getFullYear() === ano) pagosPorMes[d.getMonth()] += l.valor;
     }
   });
-  
   if(grafEmprestimos) grafEmprestimos.destroy();
   grafEmprestimos = new Chart(document.getElementById('graficoEmprestimos'), {
     type: 'line',
-    data: {
-      labels: meses,
-      datasets: [{
-        label: 'Valor Pago em Empréstimos',
-        data: pagosPorMes,
-        backgroundColor: 'rgba(253, 126, 20, 0.2)',
-        borderColor: 'rgba(253, 126, 20, 1)',
-        borderWidth: 3,
-        tension: 0.4,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: true, position: 'top' } },
-      scales: { y: { beginAtZero: true } }
-    }
+    data: { labels: meses, datasets: [{ label: 'Valor Pago em Empréstimos', data: pagosPorMes, backgroundColor: 'rgba(253,126,20,0.2)', borderColor: 'rgba(253,126,20,1)', borderWidth: 3, tension: 0.4, fill: true }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true } } }
   });
 }
 
-// ========== TABELA DE EMPRÉSTIMOS ==========
 function atualizarTabelaEmprestimos(){
   const tbody = document.getElementById('tabelaEmprestimos');
-  
-  if(emprestimos.length === 0){
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Nenhum empréstimo cadastrado</td></tr>';
-    return;
-  }
-  
+  if(emprestimos.length === 0){ tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Nenhum empréstimo cadastrado</td></tr>'; return; }
   tbody.innerHTML = '';
   emprestimos.forEach(e => {
-    const valorParcela = e.valorTotal / e.totalParcelas;
-    const saldoRestante = e.valorTotal - (e.parcelasPagas * valorParcela);
-    const progresso = (e.parcelasPagas / e.totalParcelas) * 100;
+    const vp = e.valorTotal / e.totalParcelas;
+    const saldo = e.valorTotal - (e.parcelasPagas * vp);
+    const prog = (e.parcelasPagas / e.totalParcelas) * 100;
     const status = e.parcelasPagas >= e.totalParcelas ? 'quitado' : 'pendente';
-    
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${e.origem}</td>
-      <td>${e.valorTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
-      <td>${valorParcela.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+      <td>${e.valorTotal.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+      <td>${vp.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
       <td><span class="badge badge-${status}">${e.parcelasPagas}</span></td>
       <td>${e.totalParcelas}</td>
-      <td>${saldoRestante.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
-      <td>
-        <div class="progress-parcela">
-          <div class="progress-bar" style="width: ${progresso}%"></div>
-        </div>
-        <small class="text-muted">${progresso.toFixed(0)}%</small>
-      </td>
-      <td>
-        <button class="btn btn-sm btn-danger" onclick="deletarEmprestimo(${e.id})" title="Excluir">
-          <i class="fa-solid fa-trash-can"></i>
-        </button>
-      </td>
-    `;
+      <td>${saldo.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+      <td><div class="progress-parcela"><div class="progress-bar" style="width:${prog}%"></div></div><small class="text-muted">${prog.toFixed(0)}%</small></td>
+      <td><button class="btn btn-sm btn-danger" onclick="deletarEmprestimo(${e.id})"><i class="fa-solid fa-trash-can"></i></button></td>`;
     tbody.appendChild(tr);
   });
 }
 
 function deletarEmprestimo(id){
-  if(!confirm('Deseja realmente excluir este empréstimo? Os lançamentos vinculados não serão excluídos.')){
-    return;
-  }
-  
+  if(!confirm('Deseja realmente excluir este empréstimo? Os lançamentos vinculados não serão excluídos.')) return;
   emprestimos = emprestimos.filter(e => e.id !== id);
   localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
   salvarNoFirebase('emprestimos', emprestimos);
-  atualizarEmprestimos();
-  atualizarSelectEmprestimos();
+  atualizarEmprestimos(); atualizarSelectEmprestimos();
 }
 
-// ========== ADICIONAR INVESTIMENTO ==========
+// ========== INVESTIMENTOS ==========
 function addInvestimento(){
-  if(!iNome.value || !iValor.value || !iData.value){
-    alert('Preencha todos os campos!');
-    return;
-  }
-
-  investimentos.push({
-    id: Date.now(),
-    nome: iNome.value,
-    tipo: iTipo.value,
-    valor: parseFloat(iValor.value),
-    data: iData.value
-  });
-  
+  if(!iNome.value || !iValor.value || !iData.value){ alert('Preencha todos os campos!'); return; }
+  investimentos.push({ id: Date.now(), nome: iNome.value, tipo: iTipo.value, valor: parseFloat(iValor.value), data: iData.value });
   localStorage.setItem("investimentos", JSON.stringify(investimentos));
   salvarNoFirebase('investimentos', investimentos);
-  
-  iNome.value = '';
-  iValor.value = '';
-  
-  reconstruirFiltroAnos();
-  atualizarResumo();
-  atualizarTabelaInvestimentos();
+  iNome.value = ''; iValor.value = '';
+  reconstruirFiltroAnos(); atualizarResumo(); atualizarTabelaInvestimentos();
   alert('Investimento adicionado com sucesso!');
-}
-
-// ========== ADICIONAR CARTÃO ==========
-function addCartao(){
-  if(!cBanco.value || !cValor.value || !cData.value){
-    alert('Preencha todos os campos!');
-    return;
-  }
-
-  cartoes.push({
-    id: Date.now(),
-    banco: cBanco.value,
-    valor: parseFloat(cValor.value),
-    data: cData.value,
-    status: cStatus.value
-  });
-  
-  localStorage.setItem("cartoes", JSON.stringify(cartoes));
-  salvarNoFirebase('cartoes', cartoes);
-  
-  cBanco.value = '';
-  cValor.value = '';
-  
-  reconstruirFiltroAnos();
-  atualizarCartoes();
-  atualizarResumo();
-  alert('Cartão adicionado com sucesso!');
-}
-
-// ========== FILTRAR DADOS POR MÊS/ANO ==========
-function filtrarPorMesAno(dados){
-  const mes = document.getElementById('filtroMes').value; // "todos" ou "0"-"11"
-  const ano = parseInt(document.getElementById('filtroAno').value);
-  
-  return dados.filter(item => {
-    const data = new Date(item.data + 'T00:00:00');
-    const anoOk = data.getFullYear() === ano;
-    if(mes === 'todos') return anoOk;
-    return anoOk && data.getMonth() === parseInt(mes);
-  });
-}
-
-// Filtrar apenas por ano (ignora mês)
-function filtrarPorAno(dados){
-  const ano = parseInt(document.getElementById('filtroAno').value);
-  return dados.filter(item => {
-    const data = new Date(item.data + 'T00:00:00');
-    return data.getFullYear() === ano;
-  });
-}
-
-// ========== RECONSTRUIR SELECT DE ANOS DINAMICAMENTE ==========
-function reconstruirFiltroAnos(){
-  const anos = new Set();
-  const hoje = new Date();
-  anos.add(hoje.getFullYear()); // sempre ter o ano atual
-
-  // Pegar todos os anos presentes nos dados
-  [...lancamentos, ...cartoes, ...investimentos, ...emprestimos].forEach(item => {
-    const dataField = item.data || item.dataInicio;
-    if(dataField){
-      const ano = new Date(dataField + 'T00:00:00').getFullYear();
-      anos.add(ano);
-    }
-  });
-
-  // Ordenar anos
-  const anosOrdenados = [...anos].sort((a, b) => a - b);
-
-  // Guardar valor atual do select
-  const valorAtual = document.getElementById('filtroAno').value;
-
-  // Reconstruir options
-  const select = document.getElementById('filtroAno');
-  select.innerHTML = '';
-  anosOrdenados.forEach(ano => {
-    const opt = document.createElement('option');
-    opt.value = ano;
-    opt.textContent = ano;
-    if(String(ano) === String(valorAtual)) opt.selected = true;
-    select.appendChild(opt);
-  });
-
-  // Se o valor anterior não existe mais, selecionar o ano atual
-  if(!anos.has(parseInt(valorAtual))){
-    select.value = hoje.getFullYear();
-  }
-}
-
-function aplicarFiltro(){
-  atualizarResumo();
-  atualizarTabelaLancamentos();
-  atualizarCartoes();
-  atualizarTabelaInvestimentos();
-  atualizarEmprestimos();
-}
-
-// ========== ATUALIZAR RESUMO ==========
-function atualizarResumo(){
-  const lancamentosFiltrados = filtrarPorMesAno(lancamentos);
-  const investimentosFiltrados = filtrarPorMesAno(investimentos);
-  const cartoesFiltrados = filtrarPorMesAno(cartoes);
-
-  const receita = lancamentosFiltrados
-    .filter(l => l.tipo === 'entrada')
-    .reduce((s, l) => s + l.valor, 0);
-  
-  const despesasLancamentos = lancamentosFiltrados
-    .filter(l => l.tipo === 'saida')
-    .reduce((s, l) => s + l.valor, 0);
-  
-  const despesasCartoes = cartoesFiltrados
-    .reduce((s, c) => s + c.valor, 0);
-  
-  const despesasTotal = despesasLancamentos + despesasCartoes;
-  
-  const inv = investimentosFiltrados
-    .filter(i => i.tipo === 'Investimento')
-    .reduce((s, i) => s + i.valor, 0);
-  
-  const res = investimentosFiltrados
-    .filter(i => i.tipo === 'Reserva')
-    .reduce((s, i) => s + i.valor, 0);
-
-  // ACUMULADO: Reserva e Investimento somam todos os meses anteriores (são acumulativos)
-  const mesAtual = document.getElementById('filtroMes').value;
-  const anoAtual = parseInt(document.getElementById('filtroAno').value);
-  let invAcumulado = inv;
-  let resAcumulado = res;
-
-  if(mesAtual !== 'todos'){
-    const mesAtualNum = parseInt(mesAtual);
-    investimentos.forEach(i => {
-      const d = new Date(i.data + 'T00:00:00');
-      const ano = d.getFullYear();
-      const mes = d.getMonth();
-      if(ano < anoAtual || (ano === anoAtual && mes < mesAtualNum)){
-        if(i.tipo === 'Investimento') invAcumulado += i.valor;
-        if(i.tipo === 'Reserva') resAcumulado += i.valor;
-      }
-    });
-  }
-  
-  // SALDO ANTERIOR (só calcula quando um mês específico está selecionado)
-  let saldoAnterior = 0;
-
-  if(mesAtual !== 'todos'){
-    const mesAtualNum = parseInt(mesAtual);
-    
-    // Calcular saldo acumulado de TODOS os meses anteriores ao mês atual
-    // Percorre todos os dados desde o início até o mês anterior ao atual
-    lancamentos.forEach(l => {
-      const d = new Date(l.data + 'T00:00:00');
-      const ano = d.getFullYear();
-      const mes = d.getMonth();
-      
-      // Só considerar lançamentos anteriores ao mês atual
-      if(ano < anoAtual || (ano === anoAtual && mes < mesAtualNum)){
-        if(l.tipo === 'entrada'){
-          saldoAnterior += l.valor;
-        } else {
-          saldoAnterior -= l.valor;
-        }
-      }
-    });
-    
-    // Subtrair despesas de cartões de todos os meses anteriores
-    cartoes.forEach(c => {
-      const d = new Date(c.data + 'T00:00:00');
-      const ano = d.getFullYear();
-      const mes = d.getMonth();
-      
-      if(ano < anoAtual || (ano === anoAtual && mes < mesAtualNum)){
-        saldoAnterior -= c.valor;
-      }
-    });
-  }
-
-  const receitaTotal = receita + saldoAnterior;
-  const saldoFinal   = receitaTotal - despesasTotal - inv - res;
-
-  // ATUALIZAR CARDS
-  rReceita.innerText        = receita.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-  rSaldoAnterior.innerText  = saldoAnterior.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-  rReceitaTotal.innerText   = receitaTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-  rInvestimentos.innerText  = invAcumulado.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-  rReserva.innerText        = resAcumulado.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-  rDespesas.innerText       = despesasTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-  rSaldoFinal.innerText     = saldoFinal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-
-  // SAÚDE FINANCEIRA
-  const card = document.getElementById("cardSaude");
-  card.className = "card-fin p-3";
-  if(saldoFinal < 0){
-    card.classList.add("saude-perigo");
-    rSaude.innerText = "PERIGO";
-    rSaudeDesc.innerText = "Saldo negativo. Risco financeiro alto!";
-  } else if(invAcumulado > 0 && resAcumulado > 0 && saldoFinal >= 0){
-    card.classList.add("saude-saudavel");
-    rSaude.innerText = "SAUDÁVEL";
-    rSaudeDesc.innerText = "Parabéns! Você investe e mantém reserva.";
-  } else {
-    card.classList.add("saude-atencao");
-    rSaude.innerText = "ATENÇÃO";
-    rSaudeDesc.innerText = "Saldo positivo, mas falta planejamento.";
-  }
-
-  // PRÓXIMO EMPRÉSTIMO A QUITAR
-  const emprestimosAtivos = emprestimos.filter(e => e.parcelasPagas < e.totalParcelas);
-  if(emprestimosAtivos.length > 0){
-    const porProximidade = [...emprestimosAtivos].sort((a, b) => {
-      const restanteA = a.totalParcelas - a.parcelasPagas;
-      const restanteB = b.totalParcelas - b.parcelasPagas;
-      return restanteA - restanteB;
-    });
-    const emp = porProximidade[0];
-    const restante = emp.totalParcelas - emp.parcelasPagas;
-    const valorParcela = emp.valorTotal / emp.totalParcelas;
-    rProxEmprestimo.innerText = emp.origem;
-    rProxEmprestimoDesc.innerText = `${restante} ${restante === 1 ? 'parcela' : 'parcelas'} • ${valorParcela.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}/mês`;
-  } else {
-    rProxEmprestimo.innerText = '-';
-    rProxEmprestimoDesc.innerText = 'Nenhum empréstimo ativo';
-  }
-
-  atualizarGraficos();
-}
-
-// ========== ATUALIZAR GRÁFICOS ==========
-function atualizarGraficos(){
-  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  const ano = parseInt(document.getElementById('filtroAno').value);
-  
-  const receitasMensais  = Array(12).fill(0);
-  const despesasMensais  = Array(12).fill(0);
-  const saldosMensais    = Array(12).fill(0);
-
-  for(let m = 0; m < 12; m++){
-    const lMes = lancamentos.filter(l => {
-      const d = new Date(l.data + 'T00:00:00');
-      return d.getMonth() === m && d.getFullYear() === ano;
-    });
-    const iMes = investimentos.filter(i => {
-      const d = new Date(i.data + 'T00:00:00');
-      return d.getMonth() === m && d.getFullYear() === ano;
-    });
-    const cMes = cartoes.filter(c => {
-      const d = new Date(c.data + 'T00:00:00');
-      return d.getMonth() === m && d.getFullYear() === ano;
-    });
-
-    const rec  = lMes.filter(l => l.tipo === 'entrada').reduce((s, l) => s + l.valor, 0);
-    const desp = lMes.filter(l => l.tipo === 'saida').reduce((s, l) => s + l.valor, 0) +
-                 cMes.reduce((s, c) => s + c.valor, 0);
-    const inv  = iMes.filter(i => i.tipo === 'Investimento').reduce((s, i) => s + i.valor, 0);
-    const res  = iMes.filter(i => i.tipo === 'Reserva').reduce((s, i) => s + i.valor, 0);
-
-    receitasMensais[m]  = rec;
-    despesasMensais[m]  = desp;
-    saldosMensais[m]    = rec - desp - inv - res;
-  }
-
-  // GRÁFICO RECEITA x DESPESA
-  if(grafReceitaDespesa) grafReceitaDespesa.destroy();
-  grafReceitaDespesa = new Chart(document.getElementById('graficoReceitaDespesa'), {
-    type: 'bar',
-    data: {
-      labels: meses,
-      datasets: [
-        {
-          label: 'Receita',
-          data: receitasMensais,
-          backgroundColor: 'rgba(40, 167, 69, 0.7)',
-          borderColor: 'rgba(40, 167, 69, 1)',
-          borderWidth: 2
-        },
-        {
-          label: 'Despesa',
-          data: despesasMensais,
-          backgroundColor: 'rgba(220, 53, 69, 0.7)',
-          borderColor: 'rgba(220, 53, 69, 1)',
-          borderWidth: 2
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: true, position: 'top' } },
-      scales: { y: { beginAtZero: true } }
-    }
-  });
-
-  // GRÁFICO SALDO FINAL
-  if(grafSaldoFinal) grafSaldoFinal.destroy();
-  grafSaldoFinal = new Chart(document.getElementById('graficoSaldoFinal'), {
-    type: 'line',
-    data: {
-      labels: meses,
-      datasets: [{
-        label: 'Saldo Final',
-        data: saldosMensais,
-        backgroundColor: 'rgba(23, 162, 184, 0.2)',
-        borderColor: 'rgba(23, 162, 184, 1)',
-        borderWidth: 3,
-        tension: 0.4,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: true, position: 'top' } },
-      scales: { y: { beginAtZero: false } }
-    }
-  });
-}
-
-// ========== ATUALIZAR TABELA DE LANÇAMENTOS ==========
-function atualizarTabelaLancamentos(){
-  const lancamentosFiltrados = filtrarPorMesAno(lancamentos);
-  const tbody = document.getElementById('tabelaLancamentos');
-  
-  if(lancamentosFiltrados.length === 0){
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhum lançamento para este mês</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = '';
-  // Ordenar por data (mais antiga primeiro)
-  const lancamentosOrdenados = [...lancamentosFiltrados].sort((a, b) => new Date(a.data) - new Date(b.data));
-  lancamentosOrdenados.forEach(l => {
-    const cor = l.tipo === 'entrada' ? 'success' : 'danger';
-    let categoriaTexto = l.categoria;
-    if(l.emprestimoOrigem){
-      categoriaTexto += ` (${l.emprestimoOrigem})`;
-    }
-    
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${new Date(l.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-      <td>${l.descricao}</td>
-      <td><span class="badge bg-secondary">${categoriaTexto}</span></td>
-      <td><span class="badge bg-${cor}">${l.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span></td>
-      <td>${l.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
-      <td>
-        <button class="btn btn-sm btn-info me-1" onclick="editarLancamento(${l.id})" title="Editar">
-          <i class="fa-solid fa-pen-to-square"></i>
-        </button>
-        <button class="btn btn-sm btn-danger" onclick="deletarLancamento(${l.id})" title="Excluir">
-          <i class="fa-solid fa-trash-can"></i>
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function editarLancamento(id){
-  const lancamento = lancamentos.find(l => l.id === id);
-  if(!lancamento) return;
-  
-  lDesc.value  = lancamento.descricao;
-  lTipo.value  = lancamento.tipo;
-  lValor.value = lancamento.valor;
-  lData.value  = lancamento.data;
-
-  // Restaurar visibilidade baseada no tipo
-  toggleCategoriaEmprestimo();
-
-  if(lancamento.tipo === 'saida'){
-    lCategoria.value = lancamento.categoria;
-    if(lancamento.categoria === 'Empréstimo' && lancamento.emprestimoId){
-      document.getElementById('emprestimoExtra').classList.remove('hidden');
-      lEmprestimoSelect.value = lancamento.emprestimoId;
-      
-      // Devolver a parcela ao empréstimo
-      const emprestimo = emprestimos.find(e => e.id === lancamento.emprestimoId);
-      if(emprestimo && emprestimo.parcelasPagas > 0){
-        emprestimo.parcelasPagas -= 1;
-        localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
-        salvarNoFirebase('emprestimos', emprestimos);
-      }
-    }
-  }
-  
-  // Remover sem pedir confirmação na edição
-  lancamentos = lancamentos.filter(l => l.id !== id);
-  localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
-  salvarNoFirebase('lancamentos', lancamentos);
-  atualizarResumo();
-  atualizarTabelaLancamentos();
-  atualizarSelectEmprestimos();
-  
-  window.scrollTo({top: 0, behavior: 'smooth'});
-}
-
-function deletarLancamento(id){
-  const lancamento = lancamentos.find(l => l.id === id);
-  if(!lancamento) return;
-  
-  if(!confirm('Deseja realmente excluir este lançamento?')) return;
-  
-  // Se for um lançamento de empréstimo, devolver a parcela
-  if(lancamento.emprestimoId){
-    const emprestimo = emprestimos.find(e => e.id === lancamento.emprestimoId);
-    if(emprestimo && emprestimo.parcelasPagas > 0){
-      emprestimo.parcelasPagas -= 1;
-      localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
-      salvarNoFirebase('emprestimos', emprestimos);
-    }
-  }
-  
-  lancamentos = lancamentos.filter(l => l.id !== id);
-  localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
-  salvarNoFirebase('lancamentos', lancamentos);
-  atualizarResumo();
-  atualizarTabelaLancamentos();
-  atualizarSelectEmprestimos();
-}
-
-// ========== ATUALIZAR CARTÕES ==========
-function atualizarCartoes(){
-  const cartoesFiltrados     = filtrarPorMesAno(cartoes);
-  const lancamentosFiltrados = filtrarPorMesAno(lancamentos);
-  const ano = parseInt(document.getElementById('filtroAno').value);
-
-  // --- GASTO TOTAL DO MÊS (somente faturas de cartões) ---
-  const despMes = cartoesFiltrados.reduce((s, c) => s + c.valor, 0);
-  document.getElementById('cTotal').innerText = despMes.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-
-  // --- MAIOR FATURA do mês ---
-  if(cartoesFiltrados.length > 0){
-    const maior = cartoesFiltrados.reduce((a, b) => a.valor > b.valor ? a : b);
-    document.getElementById('cMaior').innerText     = maior.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-    document.getElementById('cMaiorDesc').innerText = maior.banco;
-  } else {
-    document.getElementById('cMaior').innerText     = '-';
-    document.getElementById('cMaiorDesc').innerText = 'Nenhum cartão';
-  }
-
-  // --- GASTO TOTAL DO ANO (somente faturas de cartões, ignora filtro de mês) ---
-  const cartAno   = filtrarPorAno(cartoes);
-  const totalAno  = cartAno.reduce((s, c) => s + c.valor, 0);
-  document.getElementById('cTotalAno').innerText = totalAno.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-
-  // --- GRÁFICO DE COLUNAS COM RÓTULOS DE DADOS ---
-  if(grafCartoes) grafCartoes.destroy();
-  
-  if(cartoesFiltrados.length > 0){
-    grafCartoes = new Chart(document.getElementById('graficoCartoes'), {
-      type: 'bar',
-      data: {
-        labels: cartoesFiltrados.map(c => c.banco),
-        datasets: [{
-          label: 'Valor da Fatura',
-          data: cartoesFiltrados.map(c => c.valor),
-          backgroundColor: [
-            'rgba(75, 31, 166, 0.75)',
-            'rgba(40, 167, 69, 0.75)',
-            'rgba(220, 53, 69, 0.75)',
-            'rgba(255, 193, 7, 0.75)',
-            'rgba(23, 162, 184, 0.75)',
-            'rgba(111, 66, 193, 0.75)',
-            'rgba(253, 126, 20, 0.75)',
-            'rgba(13, 202, 240, 0.75)'
-          ],
-          borderColor: [
-            'rgba(75, 31, 166, 1)',
-            'rgba(40, 167, 69, 1)',
-            'rgba(220, 53, 69, 1)',
-            'rgba(255, 193, 7, 1)',
-            'rgba(23, 162, 184, 1)',
-            'rgba(111, 66, 193, 1)',
-            'rgba(253, 126, 20, 1)',
-            'rgba(13, 202, 240, 1)'
-          ],
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: {
-          padding: { top: 25 }
-        },
-        plugins: {
-          legend: { display: false },
-          datalabels: {
-            display: true,
-            color: '#333',
-            font: { weight: 'bold', size: 13 },
-            anchor: 'end',
-            align: 'end',
-            formatter: function(value){
-              return value.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-            }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            // dar espaço extra no topo para os rótulos
-            ticks: {
-              callback: function(val){ return val.toLocaleString('pt-BR'); }
-            }
-          }
-        }
-      },
-      plugins: [chartjsPluginDatalabels]
-    });
-  }
-
-  // --- TABELA HISTÓRICO DE CARTÕES ---
-  const tbody = document.getElementById('tabelaCartoes');
-  if(cartoesFiltrados.length === 0){
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nenhum cartão cadastrado</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = '';
-  // Ordenar por data (mais antiga primeiro)
-  const cartoesOrdenados = [...cartoesFiltrados].sort((a, b) => new Date(a.data) - new Date(b.data));
-  cartoesOrdenados.forEach(c => {
-    const statusLabel = (c.status === 'parcelado') ? '<span style="color:#dc3545;font-weight:bold;">PARCELADO</span>' : '<span style="color:#28a745;font-weight:bold;">PAGO</span>';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${new Date(c.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-      <td>${c.banco}</td>
-      <td>${c.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
-      <td>${statusLabel}</td>
-      <td>
-        <button class="btn btn-sm btn-info me-1" onclick="editarCartao(${c.id})" title="Editar">
-          <i class="fa-solid fa-pen-to-square"></i>
-        </button>
-        <button class="btn btn-sm ${c.status === 'parcelado' ? 'btn-danger' : 'btn-success'} me-1" onclick="toggleStatusCartao(${c.id})" title="${c.status === 'parcelado' ? 'Marcar como Pago' : 'Marcar como Parcelado'}">
-          <i class="fa-solid ${c.status === 'parcelado' ? 'fa-circle-xmark' : 'fa-circle-check'}"></i>
-        </button>
-        <button class="btn btn-sm btn-danger" onclick="deletarCartao(${c.id})" title="Excluir">
-          <i class="fa-solid fa-trash-can"></i>
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function toggleStatusCartao(id){
-  const cartao = cartoes.find(c => c.id === id);
-  if(!cartao) return;
-  cartao.status = (cartao.status === 'parcelado') ? 'pago' : 'parcelado';
-  localStorage.setItem("cartoes", JSON.stringify(cartoes));
-  salvarNoFirebase('cartoes', cartoes);
-  atualizarCartoes();
-}
-
-function editarCartao(id){
-  const cartao = cartoes.find(c => c.id === id);
-  if(!cartao) return;
-  
-  cBanco.value  = cartao.banco;
-  cValor.value  = cartao.valor;
-  cData.value   = cartao.data;
-  cStatus.value = cartao.status || 'pago';
-  
-  cartoes = cartoes.filter(c => c.id !== id);
-  localStorage.setItem("cartoes", JSON.stringify(cartoes));
-  salvarNoFirebase('cartoes', cartoes);
-  atualizarCartoes();
-  atualizarResumo();
-  window.scrollTo({top: 0, behavior: 'smooth'});
-}
-
-function deletarCartao(id){
-  if(!confirm('Deseja realmente excluir este cartão?')) return;
-  cartoes = cartoes.filter(c => c.id !== id);
-  localStorage.setItem("cartoes", JSON.stringify(cartoes));
-  salvarNoFirebase('cartoes', cartoes);
-  atualizarCartoes();
-  atualizarResumo();
-}
-
-// ========== ATUALIZAR TABELA DE INVESTIMENTOS ==========
-function atualizarTabelaInvestimentos(){
-  const investimentosFiltrados = filtrarPorMesAno(investimentos);
-  const tbody = document.getElementById('tabelaInvestimentos');
-  
-  if(investimentosFiltrados.length === 0){
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhum investimento para este mês</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = '';
-  // Ordenar por data (mais antiga primeiro)
-  const investimentosOrdenados = [...investimentosFiltrados].sort((a, b) => new Date(a.data) - new Date(b.data));
-  investimentosOrdenados.forEach(i => {
-    const tipoCor = i.tipo === 'Investimento' ? 'primary' : 'success';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${new Date(i.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-      <td>${i.nome}</td>
-      <td><span class="badge bg-${tipoCor}">${i.tipo}</span></td>
-      <td>${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
-      <td>
-        <button class="btn btn-sm btn-info me-1" onclick="editarInvestimento(${i.id})" title="Editar">
-          <i class="fa-solid fa-pen-to-square"></i>
-        </button>
-        <button class="btn btn-sm btn-danger" onclick="deletarInvestimento(${i.id})" title="Excluir">
-          <i class="fa-solid fa-trash-can"></i>
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
 }
 
 function editarInvestimento(id){
   const inv = investimentos.find(i => i.id === id);
   if(!inv) return;
-  
-  iNome.value  = inv.nome;
-  iTipo.value  = inv.tipo;
-  iValor.value = inv.valor;
-  iData.value  = inv.data;
-  
+  iNome.value = inv.nome; iTipo.value = inv.tipo; iValor.value = inv.valor; iData.value = inv.data;
   investimentos = investimentos.filter(i => i.id !== id);
   localStorage.setItem("investimentos", JSON.stringify(investimentos));
   salvarNoFirebase('investimentos', investimentos);
-  atualizarResumo();
-  atualizarTabelaInvestimentos();
+  atualizarResumo(); atualizarTabelaInvestimentos();
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
@@ -1774,19 +935,373 @@ function deletarInvestimento(id){
   investimentos = investimentos.filter(i => i.id !== id);
   localStorage.setItem("investimentos", JSON.stringify(investimentos));
   salvarNoFirebase('investimentos', investimentos);
-  atualizarResumo();
-  atualizarTabelaInvestimentos();
+  atualizarResumo(); atualizarTabelaInvestimentos();
 }
 
-// ========== BACKUP E IMPORTAÇÃO ==========
+function atualizarTabelaInvestimentos(){
+  const inf = filtrarPorMesAno(investimentos);
+  const tbody = document.getElementById('tabelaInvestimentos');
+  if(inf.length === 0){ tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhum investimento para este mês</td></tr>'; return; }
+  tbody.innerHTML = '';
+  [...inf].sort((a,b) => new Date(a.data)-new Date(b.data)).forEach(i => {
+    const cor = i.tipo === 'Investimento' ? 'primary' : 'success';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(i.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${i.nome}</td>
+      <td><span class="badge bg-${cor}">${i.tipo}</span></td>
+      <td>${i.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-1" onclick="editarInvestimento(${i.id})"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="deletarInvestimento(${i.id})"><i class="fa-solid fa-trash-can"></i></button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ========== CARTÕES ==========
+
+// ============================================================
+// ALTERAÇÃO 2: addCartao() agora define status padrão como
+// 'em_aberto' em vez de usar o valor do select (que antes
+// era 'pago' por padrão).
+// O select ainda permite escolher o status inicial manualmente.
+// ============================================================
+function addCartao(){
+  if(!cBanco.value || !cValor.value || !cData.value){ alert('Preencha todos os campos!'); return; }
+  cartoes.push({
+    id: Date.now(),
+    banco: cBanco.value,
+    valor: parseFloat(cValor.value),
+    data: cData.value,
+    status: cStatus.value   // usa o valor do select (padrão agora é 'em_aberto')
+  });
+  localStorage.setItem("cartoes", JSON.stringify(cartoes));
+  salvarNoFirebase('cartoes', cartoes);
+  cBanco.value = ''; cValor.value = '';
+  reconstruirFiltroAnos(); atualizarCartoes(); atualizarResumo();
+  alert('Cartão adicionado com sucesso!');
+}
+
+// ============================================================
+// ALTERAÇÃO 3: toggleStatusCartao() agora cicla entre
+// TRÊS estados na ordem: em_aberto → pago → parcelado → em_aberto
+// ============================================================
+function toggleStatusCartao(id){
+  const cartao = cartoes.find(c => c.id === id);
+  if(!cartao) return;
+
+  const ciclo = { 'em_aberto': 'pago', 'pago': 'parcelado', 'parcelado': 'em_aberto' };
+  // Garante compatibilidade com registros antigos que não tinham 'em_aberto'
+  const statusAtual = cartao.status || 'em_aberto';
+  cartao.status = ciclo[statusAtual] || 'em_aberto';
+
+  localStorage.setItem("cartoes", JSON.stringify(cartoes));
+  salvarNoFirebase('cartoes', cartoes);
+  atualizarCartoes();
+}
+
+function editarCartao(id){
+  const c = cartoes.find(c => c.id === id);
+  if(!c) return;
+  cBanco.value = c.banco; cValor.value = c.valor; cData.value = c.data; cStatus.value = c.status || 'em_aberto';
+  cartoes = cartoes.filter(c => c.id !== id);
+  localStorage.setItem("cartoes", JSON.stringify(cartoes));
+  salvarNoFirebase('cartoes', cartoes);
+  atualizarCartoes(); atualizarResumo();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function deletarCartao(id){
+  if(!confirm('Deseja realmente excluir este cartão?')) return;
+  cartoes = cartoes.filter(c => c.id !== id);
+  localStorage.setItem("cartoes", JSON.stringify(cartoes));
+  salvarNoFirebase('cartoes', cartoes);
+  atualizarCartoes(); atualizarResumo();
+}
+
+// ============================================================
+// ALTERAÇÃO 4: atualizarCartoes() — exibição do badge e botão
+// agora contempla os três estados:
+//   em_aberto → badge azul  "EM ABERTO"  | botão cinza  (ícone relógio)
+//   pago      → badge verde "PAGO"        | botão verde  (ícone check)
+//   parcelado → badge rojo  "PARCELADO"   | botão vermelho (ícone xmark)
+// ============================================================
+function atualizarCartoes(){
+  const cf = filtrarPorMesAno(cartoes);
+  const ano = parseInt(document.getElementById('filtroAno').value);
+
+  const despMes = cf.reduce((s,c) => s+c.valor, 0);
+  document.getElementById('cTotal').innerText = despMes.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+
+  if(cf.length > 0){
+    const maior = cf.reduce((a,b) => a.valor>b.valor?a:b);
+    document.getElementById('cMaior').innerText     = maior.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    document.getElementById('cMaiorDesc').innerText = maior.banco;
+  } else {
+    document.getElementById('cMaior').innerText     = '-';
+    document.getElementById('cMaiorDesc').innerText = 'Nenhum cartão';
+  }
+
+  const totalAno = filtrarPorAno(cartoes).reduce((s,c) => s+c.valor, 0);
+  document.getElementById('cTotalAno').innerText = totalAno.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+
+  if(grafCartoes) grafCartoes.destroy();
+  if(cf.length > 0){
+    grafCartoes = new Chart(document.getElementById('graficoCartoes'), {
+      type: 'bar',
+      data: {
+        labels: cf.map(c => c.banco),
+        datasets: [{
+          label: 'Valor da Fatura',
+          data: cf.map(c => c.valor),
+          backgroundColor: ['rgba(75,31,166,0.75)','rgba(40,167,69,0.75)','rgba(220,53,69,0.75)','rgba(255,193,7,0.75)','rgba(23,162,184,0.75)','rgba(111,66,193,0.75)','rgba(253,126,20,0.75)','rgba(13,202,240,0.75)'],
+          borderColor:     ['rgba(75,31,166,1)',   'rgba(40,167,69,1)',   'rgba(220,53,69,1)',   'rgba(255,193,7,1)',   'rgba(23,162,184,1)',   'rgba(111,66,193,1)',   'rgba(253,126,20,1)',   'rgba(13,202,240,1)'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        layout: { padding: { top: 25 } },
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            display: true, color: '#333', font: { weight: 'bold', size: 13 },
+            anchor: 'end', align: 'end',
+            formatter: v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
+          }
+        },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('pt-BR') } } }
+      },
+      plugins: [chartjsPluginDatalabels]
+    });
+  }
+
+  // TABELA
+  const tbody = document.getElementById('tabelaCartoes');
+  if(cf.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhum cartão cadastrado</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  [...cf].sort((a,b) => new Date(a.data)-new Date(b.data)).forEach(c => {
+    const status = c.status || 'em_aberto';
+
+    // Badge de status
+    const badgeMap = {
+      'em_aberto': '<span style="color:#0d6efd;font-weight:bold;"><i class="fa-solid fa-clock"></i> EM ABERTO</span>',
+      'pago':      '<span style="color:#28a745;font-weight:bold;"><i class="fa-solid fa-circle-check"></i> PAGO</span>',
+      'parcelado': '<span style="color:#dc3545;font-weight:bold;"><i class="fa-solid fa-circle-xmark"></i> PARCELADO</span>'
+    };
+    const statusLabel = badgeMap[status] || badgeMap['em_aberto'];
+
+    // Botão de alternância — mostra para qual estado vai ao clicar
+    const btnMap = {
+      'em_aberto': { cls: 'btn-secondary', icon: 'fa-clock',        title: 'Marcar como Pago' },
+      'pago':      { cls: 'btn-success',   icon: 'fa-circle-check', title: 'Marcar como Parcelado' },
+      'parcelado': { cls: 'btn-danger',    icon: 'fa-circle-xmark', title: 'Marcar como Em Aberto' }
+    };
+    const btn = btnMap[status] || btnMap['em_aberto'];
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(c.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${c.banco}</td>
+      <td>${c.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+      <td>${statusLabel}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-1" onclick="editarCartao(${c.id})" title="Editar">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </button>
+        <button class="btn btn-sm ${btn.cls} me-1" onclick="toggleStatusCartao(${c.id})" title="${btn.title}">
+          <i class="fa-solid ${btn.icon}"></i>
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deletarCartao(${c.id})" title="Excluir">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ========== FILTROS ==========
+function filtrarPorMesAno(dados){
+  const mes = document.getElementById('filtroMes').value;
+  const ano = parseInt(document.getElementById('filtroAno').value);
+  return dados.filter(item => {
+    const d = new Date(item.data+'T00:00:00');
+    return (mes === 'todos' || d.getMonth() === parseInt(mes)) && d.getFullYear() === ano;
+  });
+}
+
+function filtrarPorAno(dados){
+  const ano = parseInt(document.getElementById('filtroAno').value);
+  return dados.filter(item => new Date(item.data+'T00:00:00').getFullYear() === ano);
+}
+
+function reconstruirFiltroAnos(){
+  const anos = new Set();
+  anos.add(new Date().getFullYear());
+  [...lancamentos,...cartoes,...investimentos,...emprestimos].forEach(item => {
+    const df = item.data || item.dataInicio;
+    if(df) anos.add(new Date(df+'T00:00:00').getFullYear());
+  });
+  const anosOrdenados = [...anos].sort((a,b) => a-b);
+  const valorAtual = document.getElementById('filtroAno').value;
+  const select = document.getElementById('filtroAno');
+  select.innerHTML = '';
+  anosOrdenados.forEach(ano => {
+    const opt = document.createElement('option');
+    opt.value = ano; opt.textContent = ano;
+    if(String(ano) === String(valorAtual)) opt.selected = true;
+    select.appendChild(opt);
+  });
+  if(!anos.has(parseInt(valorAtual))) select.value = new Date().getFullYear();
+}
+
+function aplicarFiltro(){
+  atualizarResumo(); atualizarTabelaLancamentos(); atualizarCartoes();
+  atualizarTabelaInvestimentos(); atualizarEmprestimos();
+}
+
+// ========== RESUMO ==========
+function atualizarResumo(){
+  const lf = filtrarPorMesAno(lancamentos);
+  const inf = filtrarPorMesAno(investimentos);
+  const cf  = filtrarPorMesAno(cartoes);
+  const mesAtual = document.getElementById('filtroMes').value;
+  const anoAtual = parseInt(document.getElementById('filtroAno').value);
+
+  const receita        = lf.filter(l => l.tipo==='entrada').reduce((s,l) => s+l.valor, 0);
+  const despLanc       = lf.filter(l => l.tipo==='saida').reduce((s,l)   => s+l.valor, 0);
+  const despCartoes    = cf.reduce((s,c) => s+c.valor, 0);
+  const despesasTotal  = despLanc + despCartoes;
+  const inv = inf.filter(i => i.tipo==='Investimento').reduce((s,i) => s+i.valor, 0);
+  const res = inf.filter(i => i.tipo==='Reserva').reduce((s,i)      => s+i.valor, 0);
+
+  let invAcumulado = inv, resAcumulado = res;
+  if(mesAtual !== 'todos'){
+    const mesN = parseInt(mesAtual);
+    investimentos.forEach(i => {
+      const d = new Date(i.data+'T00:00:00');
+      if(d.getFullYear() < anoAtual || (d.getFullYear() === anoAtual && d.getMonth() < mesN)){
+        if(i.tipo==='Investimento') invAcumulado += i.valor;
+        if(i.tipo==='Reserva')      resAcumulado += i.valor;
+      }
+    });
+  }
+
+  // Saldo Anterior: acumula receitas - despesas - invest - reserva de cada mês anterior
+  let saldoAnterior = 0;
+  if(mesAtual !== 'todos'){
+    const mesN = parseInt(mesAtual);
+    for(let m = 0; m < 12; m++){
+      const anoM  = anoAtual; // percorre todos os meses do ano atual antes do mês filtrado
+      // Só considera meses anteriores ao selecionado (no ano atual) ou anos anteriores
+      const dentroDoAno = (anoM === anoAtual && m < mesN);
+      // Para anos anteriores — percorre todos os 12 meses
+      // Aqui simplificamos: só acumula ano atual (meses anteriores) + todos os anos anteriores
+    }
+
+    lancamentos.forEach(l => {
+      const d = new Date(l.data+'T00:00:00');
+      const lAno = d.getFullYear(), lMes = d.getMonth();
+      const anterior = lAno < anoAtual || (lAno === anoAtual && lMes < mesN);
+      if(anterior){
+        saldoAnterior += l.tipo==='entrada' ? l.valor : -l.valor;
+      }
+    });
+
+    // Cartões também saem do saldo
+    cartoes.forEach(c => {
+      const d = new Date(c.data+'T00:00:00');
+      const cAno = d.getFullYear(), cMes = d.getMonth();
+      if(cAno < anoAtual || (cAno === anoAtual && cMes < mesN)){
+        saldoAnterior -= c.valor;
+      }
+    });
+
+    // Investimentos dos meses anteriores saem do saldo anterior
+    // Reservas NÃO são descontadas (são patrimônio)
+    investimentos.forEach(i => {
+      const d = new Date(i.data+'T00:00:00');
+      const iAno = d.getFullYear(), iMes = d.getMonth();
+      if(i.tipo === 'Investimento' && (iAno < anoAtual || (iAno === anoAtual && iMes < mesN))){
+        saldoAnterior -= i.valor;
+      }
+    });
+  }
+
+  const receitaTotal = receita + saldoAnterior;
+  // Saldo Final: reserva NÃO é descontada (é patrimônio, não gasto)
+  const saldoFinal   = receitaTotal - despesasTotal - inv;
+
+  rReceita.innerText       = receita.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  rSaldoAnterior.innerText = saldoAnterior.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  rReceitaTotal.innerText  = receitaTotal.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  rInvestimentos.innerText = invAcumulado.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  rReserva.innerText       = resAcumulado.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  rDespesas.innerText      = despesasTotal.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  rSaldoFinal.innerText    = saldoFinal.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+
+  const card = document.getElementById("cardSaude");
+  card.className = "card-fin p-3";
+  if(saldoFinal < 0){
+    card.classList.add("saude-perigo"); rSaude.innerText = "PERIGO"; rSaudeDesc.innerText = "Saldo negativo. Risco financeiro alto!";
+  } else if(invAcumulado > 0 && resAcumulado > 0 && saldoFinal >= 0){
+    card.classList.add("saude-saudavel"); rSaude.innerText = "SAUDÁVEL"; rSaudeDesc.innerText = "Parabéns! Você investe e mantém reserva.";
+  } else {
+    card.classList.add("saude-atencao"); rSaude.innerText = "ATENÇÃO"; rSaudeDesc.innerText = "Saldo positivo, mas falta planejamento.";
+  }
+
+  const empAtivos = emprestimos.filter(e => e.parcelasPagas < e.totalParcelas);
+  if(empAtivos.length > 0){
+    const emp = [...empAtivos].sort((a,b) => (a.totalParcelas-a.parcelasPagas)-(b.totalParcelas-b.parcelasPagas))[0];
+    const rest = emp.totalParcelas - emp.parcelasPagas;
+    rProxEmprestimo.innerText     = emp.origem;
+    rProxEmprestimoDesc.innerText = `${rest} ${rest===1?'parcela':'parcelas'} • ${(emp.valorTotal/emp.totalParcelas).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}/mês`;
+  } else {
+    rProxEmprestimo.innerText = '-'; rProxEmprestimoDesc.innerText = 'Nenhum empréstimo ativo';
+  }
+
+  atualizarGraficos();
+}
+
+function atualizarGraficos(){
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const ano = parseInt(document.getElementById('filtroAno').value);
+  const rec = Array(12).fill(0), desp = Array(12).fill(0), saldo = Array(12).fill(0);
+  for(let m = 0; m < 12; m++){
+    const lm = lancamentos.filter(l => { const d = new Date(l.data+'T00:00:00'); return d.getMonth()===m && d.getFullYear()===ano; });
+    const im = investimentos.filter(i => { const d = new Date(i.data+'T00:00:00'); return d.getMonth()===m && d.getFullYear()===ano; });
+    const cm = cartoes.filter(c => { const d = new Date(c.data+'T00:00:00'); return d.getMonth()===m && d.getFullYear()===ano; });
+    rec[m]   = lm.filter(l=>l.tipo==='entrada').reduce((s,l)=>s+l.valor,0);
+    desp[m]  = lm.filter(l=>l.tipo==='saida').reduce((s,l)=>s+l.valor,0) + cm.reduce((s,c)=>s+c.valor,0);
+    const iv = im.filter(i=>i.tipo==='Investimento').reduce((s,i)=>s+i.valor,0);
+    const rv = im.filter(i=>i.tipo==='Reserva').reduce((s,i)=>s+i.valor,0);
+    saldo[m] = rec[m] - desp[m] - iv; // reserva não desconta do saldo (é patrimônio)
+  }
+  if(grafReceitaDespesa) grafReceitaDespesa.destroy();
+  grafReceitaDespesa = new Chart(document.getElementById('graficoReceitaDespesa'), {
+    type: 'bar',
+    data: { labels: meses, datasets: [
+      { label: 'Receita', data: rec,  backgroundColor: 'rgba(40,167,69,0.7)',  borderColor: 'rgba(40,167,69,1)',  borderWidth: 2 },
+      { label: 'Despesa', data: desp, backgroundColor: 'rgba(220,53,69,0.7)', borderColor: 'rgba(220,53,69,1)', borderWidth: 2 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true } } }
+  });
+  if(grafSaldoFinal) grafSaldoFinal.destroy();
+  grafSaldoFinal = new Chart(document.getElementById('graficoSaldoFinal'), {
+    type: 'line',
+    data: { labels: meses, datasets: [{ label: 'Saldo Final', data: saldo, backgroundColor: 'rgba(23,162,184,0.2)', borderColor: 'rgba(23,162,184,1)', borderWidth: 3, tension: 0.4, fill: true }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: false } } }
+  });
+}
+
+// ========== BACKUP ==========
 function exportarBackup(){
-  const dados = {
-    lancamentos: lancamentos,
-    cartoes: cartoes,
-    investimentos: investimentos,
-    emprestimos: emprestimos
-  };
-  const blob = new Blob([JSON.stringify(dados, null, 2)], {type: 'application/json'});
+  const blob = new Blob([JSON.stringify({lancamentos,cartoes,investimentos,emprestimos},null,2)],{type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `backup-financeiro-${new Date().toISOString().split('T')[0]}.json`;
@@ -1796,16 +1311,14 @@ function exportarBackup(){
 function importarBackup(e){
   const file = e.target.files[0];
   if(!file) return;
-  
   const reader = new FileReader();
   reader.onload = async function(event){
     try {
       const dados = JSON.parse(event.target.result);
-      if(dados.lancamentos)    { lancamentos    = dados.lancamentos;    localStorage.setItem("lancamentos",    JSON.stringify(lancamentos)); }
-      if(dados.cartoes)        { cartoes        = dados.cartoes;        localStorage.setItem("cartoes",        JSON.stringify(cartoes)); }
-      if(dados.investimentos)  { investimentos  = dados.investimentos;  localStorage.setItem("investimentos",  JSON.stringify(investimentos)); }
-      if(dados.emprestimos)    { emprestimos    = dados.emprestimos;    localStorage.setItem("emprestimos",    JSON.stringify(emprestimos)); }
-      // Salvar no Firebase tambem
+      if(dados.lancamentos)   { lancamentos   = dados.lancamentos;   localStorage.setItem("lancamentos",   JSON.stringify(lancamentos)); }
+      if(dados.cartoes)       { cartoes       = dados.cartoes;       localStorage.setItem("cartoes",       JSON.stringify(cartoes)); }
+      if(dados.investimentos) { investimentos = dados.investimentos; localStorage.setItem("investimentos", JSON.stringify(investimentos)); }
+      if(dados.emprestimos)   { emprestimos   = dados.emprestimos;   localStorage.setItem("emprestimos",   JSON.stringify(emprestimos)); }
       await Promise.all([
         salvarNoFirebase('lancamentos', lancamentos),
         salvarNoFirebase('cartoes', cartoes),
@@ -1814,9 +1327,7 @@ function importarBackup(e){
       ]);
       alert('Backup importado e salvo no Firebase com sucesso!');
       location.reload();
-    } catch(err) {
-      alert('Erro ao importar backup. Arquivo inválido.');
-    }
+    } catch(err) { alert('Erro ao importar backup. Arquivo inválido.'); }
   };
   reader.readAsText(file);
 }
@@ -1827,10 +1338,7 @@ atualizarTabelaLancamentos();
 atualizarCartoes();
 atualizarTabelaInvestimentos();
 atualizarSelectEmprestimos();
-
-// Iniciar sincronização Firebase APÓS todas as funções estarem definidas
 iniciarListeners();
 </script>
-
 </body>
 </html>
