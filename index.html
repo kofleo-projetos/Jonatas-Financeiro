@@ -173,6 +173,9 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
   <a href="#" onclick="showTab('emprestimos', this)">
     <i class="fa-solid fa-hand-holding-dollar"></i> Empréstimos
   </a>
+  <a href="#" onclick="showTab('despesasFixas', this)">
+    <i class="fa-solid fa-receipt"></i> Despesas Fixas
+  </a>
   <a href="#" onclick="showTab('cartoes', this)">
     <i class="fa-solid fa-credit-card"></i> Cartões
   </a>
@@ -313,6 +316,7 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
           <option>Educação</option>
           <option>Outros</option>
           <option>Empréstimo</option>
+          <option>Despesa Fixa</option>
         </select>
       </div>
       <div class="col-md-2 form-group">
@@ -332,6 +336,14 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
         </select>
       </div>
     </div>
+    <div class="row hidden" id="despesaFixaExtra">
+      <div class="col-md-6 form-group">
+        <label>Selecione a Despesa Fixa</label>
+        <select id="lDespesaFixaSelect" class="form-control">
+          <option value="">-- Selecione uma despesa fixa --</option>
+        </select>
+      </div>
+    </div>
     <button class="btn btn-success" onclick="addLancamento()">
       <i class="fa-solid fa-check"></i> Salvar Lançamento
     </button>
@@ -347,6 +359,81 @@ body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; margin:0; padding:
         </thead>
         <tbody id="tabelaLancamentos">
           <tr><td colspan="6" class="text-center text-muted">Nenhum lançamento para este mês</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- DESPESAS FIXAS -->
+<div id="despesasFixas" class="hidden">
+  <div class="card-fin p-4 mb-4">
+    <h5><i class="fa-solid fa-receipt"></i> Cadastrar Despesa Fixa</h5>
+    <div class="row">
+      <div class="col-md-4 form-group">
+        <label>Nome da Despesa</label>
+        <input id="dfNome" class="form-control" placeholder="Ex: Aluguel">
+      </div>
+      <div class="col-md-3 form-group">
+        <label>Categoria</label>
+        <select id="dfCategoria" class="form-control">
+          <option>Casa</option>
+          <option>Carro</option>
+          <option>Saúde</option>
+          <option>Lazer</option>
+          <option>Alimentação</option>
+          <option>Educação</option>
+          <option>Outros</option>
+        </select>
+      </div>
+      <div class="col-md-3 form-group">
+        <label>Valor Mensal</label>
+        <input type="number" id="dfValor" class="form-control" placeholder="0.00">
+      </div>
+      <div class="col-md-2 form-group d-flex align-items-end">
+        <button class="btn btn-primary w-100" onclick="addDespesaFixa()">
+          <i class="fa-solid fa-plus"></i> Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card-fin p-3">
+        <div class="icon-circle icon-red"><i class="fa-solid fa-receipt"></i></div>
+        <h6>Total de Despesas Fixas</h6>
+        <h4 id="dfTotal">R$ 0,00</h4>
+        <small>Soma mensal cadastrada</small>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-fin p-3">
+        <div class="icon-circle icon-orange"><i class="fa-solid fa-list-check"></i></div>
+        <h6>Quantidade Cadastrada</h6>
+        <h4 id="dfQtd">0</h4>
+        <small>Despesas fixas ativas</small>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-fin p-3">
+        <div class="icon-circle icon-purple"><i class="fa-solid fa-chart-pie"></i></div>
+        <h6>Maior Despesa Fixa</h6>
+        <h4 id="dfMaior">-</h4>
+        <small id="dfMaiorDesc">Nenhuma cadastrada</small>
+      </div>
+    </div>
+  </div>
+  <div class="card-fin p-4">
+    <h5><i class="fa-solid fa-clock-rotate-left"></i> Despesas Fixas Cadastradas</h5>
+    <div class="table-responsive mt-3">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Nome</th><th>Categoria</th><th>Valor Mensal</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaDespesasFixas">
+          <tr><td colspan="4" class="text-center text-muted">Nenhuma despesa fixa cadastrada</td></tr>
         </tbody>
       </table>
     </div>
@@ -626,6 +713,7 @@ let lancamentos  = JSON.parse(localStorage.getItem("lancamentos"))  || [];
 let cartoes      = JSON.parse(localStorage.getItem("cartoes"))      || [];
 let investimentos= JSON.parse(localStorage.getItem("investimentos"))|| [];
 let emprestimos  = JSON.parse(localStorage.getItem("emprestimos"))  || [];
+let despesasFixas= JSON.parse(localStorage.getItem("despesasFixas"))|| [];
 
 const ID_FIREBASE_FIXO = 'jonatas_principal';
 let deviceId = ID_FIREBASE_FIXO;
@@ -654,6 +742,7 @@ function iniciarListeners() {
     { nome: 'cartoes',      setter: (v) => { cartoes       = v; localStorage.setItem("cartoes",       JSON.stringify(v)); } },
     { nome: 'investimentos',setter: (v) => { investimentos = v; localStorage.setItem("investimentos", JSON.stringify(v)); } },
     { nome: 'emprestimos',  setter: (v) => { emprestimos   = v; localStorage.setItem("emprestimos",   JSON.stringify(v)); } },
+    { nome: 'despesasFixas',setter: (v) => { despesasFixas = v; localStorage.setItem("despesasFixas", JSON.stringify(v)); } },
   ];
 
   let prontos = 0;
@@ -667,6 +756,8 @@ function iniciarListeners() {
     atualizarTabelaInvestimentos();
     atualizarEmprestimos();
     atualizarSelectEmprestimos();
+    atualizarDespesasFixas();
+    atualizarSelectDespesasFixas();
   }
 
   colecoes.forEach(({ nome, setter }) => {
@@ -704,17 +795,22 @@ function showTab(id, el){
   document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
   el.classList.add('active');
   if(id === 'resumo')        atualizarResumo();
-  if(id === 'lancamentos')  { atualizarTabelaLancamentos(); atualizarSelectEmprestimos(); }
+  if(id === 'lancamentos')  { atualizarTabelaLancamentos(); atualizarSelectEmprestimos(); atualizarSelectDespesasFixas(); }
   if(id === 'emprestimos')   atualizarEmprestimos();
+  if(id === 'despesasFixas') atualizarDespesasFixas();
   if(id === 'cartoes')       atualizarCartoes();
   if(id === 'investimentos') atualizarTabelaInvestimentos();
 }
 
 function toggleCategoriaEmprestimo(){
   const tipo = document.getElementById('lTipo').value;
+  const cat  = document.getElementById('lCategoria').value;
   document.getElementById('categoriaWrapper').classList.toggle('hidden', tipo === 'entrada');
   document.getElementById('emprestimoExtra').classList.toggle('hidden',
-    tipo === 'entrada' || document.getElementById('lCategoria').value !== 'Empréstimo');
+    tipo === 'entrada' || cat !== 'Empréstimo');
+  document.getElementById('despesaFixaExtra').classList.toggle('hidden',
+    tipo === 'entrada' || cat !== 'Despesa Fixa');
+  if(cat === 'Despesa Fixa' && tipo === 'saida') atualizarSelectDespesasFixas();
 }
 
 function atualizarSelectEmprestimos(){
@@ -738,7 +834,8 @@ function addLancamento(){
     tipo: lTipo.value,
     categoria: lTipo.value === 'entrada' ? 'Entrada' : lCategoria.value,
     valor: parseFloat(lValor.value),
-    data: lData.value
+    data: lData.value,
+    pago: false
   };
   if(lCategoria.value === 'Empréstimo' && lTipo.value === 'saida'){
     const emprestimoId = parseInt(lEmprestimoSelect.value);
@@ -752,10 +849,16 @@ function addLancamento(){
     localStorage.setItem("emprestimos", JSON.stringify(emprestimos));
     salvarNoFirebase('emprestimos', emprestimos);
   }
+  if(lCategoria.value === 'Despesa Fixa' && lTipo.value === 'saida'){
+    const dfId = parseInt(lDespesaFixaSelect.value);
+    if(!dfId){ alert('Selecione uma despesa fixa!'); return; }
+    const df = despesasFixas.find(d => d.id === dfId);
+    if(df){ lancamento.despesaFixaId = dfId; lancamento.despesaFixaNome = df.nome; }
+  }
   lancamentos.push(lancamento);
   localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
   salvarNoFirebase('lancamentos', lancamentos);
-  lDesc.value = ''; lValor.value = ''; lEmprestimoSelect.value = '';
+  lDesc.value = ''; lValor.value = ''; lEmprestimoSelect.value = ''; lDespesaFixaSelect.value = '';
   reconstruirFiltroAnos();
   atualizarResumo(); atualizarTabelaLancamentos(); atualizarSelectEmprestimos();
   alert('Lançamento adicionado com sucesso!');
@@ -801,18 +904,109 @@ function atualizarTabelaLancamentos(){
   if(lf.length === 0){ tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhum lançamento para este mês</td></tr>'; return; }
   tbody.innerHTML = '';
   [...lf].sort((a,b) => new Date(a.data)-new Date(b.data)).forEach(l => {
-    const cor = l.tipo === 'entrada' ? 'success' : 'danger';
-    let catTexto = l.categoria + (l.emprestimoOrigem ? ` (${l.emprestimoOrigem})` : '');
+    let tipoBadge;
+    if(l.tipo === 'entrada'){
+      tipoBadge = '<span class="badge bg-success">Entrada</span>';
+    } else if(l.pago){
+      tipoBadge = '<span class="badge" style="background:#0d6efd;">Saída Paga</span>';
+    } else {
+      tipoBadge = '<span class="badge bg-danger">Saída</span>';
+    }
+    let catTexto = l.categoria + (l.emprestimoOrigem ? ` (${l.emprestimoOrigem})` : '') + (l.despesaFixaNome ? ` (${l.despesaFixaNome})` : '');
+    const pagoBtn = l.tipo === 'saida'
+      ? `<button class="btn btn-sm me-1" style="background:${l.pago?'#0d6efd':'#6c757d'};color:#fff;" onclick="togglePagoLancamento(${l.id})" title="${l.pago?'Desmarcar como Pago':'Marcar como Pago'}"><i class="fa-solid fa-${l.pago?'circle-check':'circle'}"></i> Pago</button>`
+      : '';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${new Date(l.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
       <td>${l.descricao}</td>
       <td><span class="badge bg-secondary">${catTexto}</span></td>
-      <td><span class="badge bg-${cor}">${l.tipo==='entrada'?'Entrada':'Saída'}</span></td>
+      <td>${tipoBadge}</td>
       <td>${l.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
       <td>
+        ${pagoBtn}
         <button class="btn btn-sm btn-info me-1" onclick="editarLancamento(${l.id})"><i class="fa-solid fa-pen-to-square"></i></button>
         <button class="btn btn-sm btn-danger" onclick="deletarLancamento(${l.id})"><i class="fa-solid fa-trash-can"></i></button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function togglePagoLancamento(id){
+  const l = lancamentos.find(l => l.id === id);
+  if(!l) return;
+  l.pago = !l.pago;
+  localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+  salvarNoFirebase('lancamentos', lancamentos);
+  atualizarTabelaLancamentos();
+}
+
+// ========== DESPESAS FIXAS ==========
+function addDespesaFixa(){
+  if(!dfNome.value || !dfValor.value){ alert('Preencha todos os campos!'); return; }
+  despesasFixas.push({ id: Date.now(), nome: dfNome.value, categoria: dfCategoria.value, valor: parseFloat(dfValor.value) });
+  localStorage.setItem("despesasFixas", JSON.stringify(despesasFixas));
+  salvarNoFirebase('despesasFixas', despesasFixas);
+  dfNome.value = ''; dfValor.value = '';
+  atualizarDespesasFixas(); atualizarSelectDespesasFixas();
+  alert('Despesa fixa cadastrada com sucesso!');
+}
+
+function deletarDespesaFixa(id){
+  if(!confirm('Deseja realmente excluir esta despesa fixa?')) return;
+  despesasFixas = despesasFixas.filter(d => d.id !== id);
+  localStorage.setItem("despesasFixas", JSON.stringify(despesasFixas));
+  salvarNoFirebase('despesasFixas', despesasFixas);
+  atualizarDespesasFixas(); atualizarSelectDespesasFixas();
+}
+
+function editarDespesaFixa(id){
+  const df = despesasFixas.find(d => d.id === id);
+  if(!df) return;
+  dfNome.value = df.nome; dfCategoria.value = df.categoria; dfValor.value = df.valor;
+  despesasFixas = despesasFixas.filter(d => d.id !== id);
+  localStorage.setItem("despesasFixas", JSON.stringify(despesasFixas));
+  salvarNoFirebase('despesasFixas', despesasFixas);
+  atualizarDespesasFixas(); atualizarSelectDespesasFixas();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function atualizarSelectDespesasFixas(){
+  const select = document.getElementById('lDespesaFixaSelect');
+  if(!select) return;
+  select.innerHTML = '<option value="">-- Selecione uma despesa fixa --</option>';
+  despesasFixas.forEach(df => {
+    const opt = document.createElement('option');
+    opt.value = df.id;
+    opt.textContent = `${df.nome} - ${df.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}/mês`;
+    select.appendChild(opt);
+  });
+}
+
+function atualizarDespesasFixas(){
+  const total = despesasFixas.reduce((s,d) => s+d.valor, 0);
+  document.getElementById('dfTotal').innerText = total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  document.getElementById('dfQtd').innerText = despesasFixas.length;
+  if(despesasFixas.length > 0){
+    const maior = despesasFixas.reduce((a,b) => a.valor>b.valor?a:b);
+    document.getElementById('dfMaior').innerText = maior.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    document.getElementById('dfMaiorDesc').innerText = maior.nome;
+  } else {
+    document.getElementById('dfMaior').innerText = '-';
+    document.getElementById('dfMaiorDesc').innerText = 'Nenhuma cadastrada';
+  }
+  const tbody = document.getElementById('tabelaDespesasFixas');
+  if(despesasFixas.length === 0){ tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nenhuma despesa fixa cadastrada</td></tr>'; return; }
+  tbody.innerHTML = '';
+  despesasFixas.forEach(df => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${df.nome}</td>
+      <td><span class="badge bg-secondary">${df.categoria}</span></td>
+      <td>${df.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-1" onclick="editarDespesaFixa(${df.id})"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="deletarDespesaFixa(${df.id})"><i class="fa-solid fa-trash-can"></i></button>
       </td>`;
     tbody.appendChild(tr);
   });
@@ -1162,7 +1356,7 @@ function reconstruirFiltroAnos(){
 
 function aplicarFiltro(){
   atualizarResumo(); atualizarTabelaLancamentos(); atualizarCartoes();
-  atualizarTabelaInvestimentos(); atualizarEmprestimos();
+  atualizarTabelaInvestimentos(); atualizarEmprestimos(); atualizarDespesasFixas();
 }
 
 // ========== RESUMO ==========
@@ -1301,7 +1495,7 @@ function atualizarGraficos(){
 
 // ========== BACKUP ==========
 function exportarBackup(){
-  const blob = new Blob([JSON.stringify({lancamentos,cartoes,investimentos,emprestimos},null,2)],{type:'application/json'});
+  const blob = new Blob([JSON.stringify({lancamentos,cartoes,investimentos,emprestimos,despesasFixas},null,2)],{type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `backup-financeiro-${new Date().toISOString().split('T')[0]}.json`;
@@ -1319,11 +1513,13 @@ function importarBackup(e){
       if(dados.cartoes)       { cartoes       = dados.cartoes;       localStorage.setItem("cartoes",       JSON.stringify(cartoes)); }
       if(dados.investimentos) { investimentos = dados.investimentos; localStorage.setItem("investimentos", JSON.stringify(investimentos)); }
       if(dados.emprestimos)   { emprestimos   = dados.emprestimos;   localStorage.setItem("emprestimos",   JSON.stringify(emprestimos)); }
+      if(dados.despesasFixas) { despesasFixas = dados.despesasFixas; localStorage.setItem("despesasFixas", JSON.stringify(despesasFixas)); }
       await Promise.all([
         salvarNoFirebase('lancamentos', lancamentos),
         salvarNoFirebase('cartoes', cartoes),
         salvarNoFirebase('investimentos', investimentos),
-        salvarNoFirebase('emprestimos', emprestimos)
+        salvarNoFirebase('emprestimos', emprestimos),
+        salvarNoFirebase('despesasFixas', despesasFixas)
       ]);
       alert('Backup importado e salvo no Firebase com sucesso!');
       location.reload();
@@ -1338,6 +1534,8 @@ atualizarTabelaLancamentos();
 atualizarCartoes();
 atualizarTabelaInvestimentos();
 atualizarSelectEmprestimos();
+atualizarDespesasFixas();
+atualizarSelectDespesasFixas();
 iniciarListeners();
 </script>
 </body>
